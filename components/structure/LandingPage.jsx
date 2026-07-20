@@ -1300,8 +1300,13 @@ function BetaForm() {
                         <Input
                           value={form.phone}
                           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          placeholder="+91 98••• 12345"
+                          placeholder="98••• 12345"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
+                          type="tel"
+                          maxLength={10}
+                          inputMode="numeric"
+                          autoComplete="tel"
+                          pattern="[6-9][0-9]{9}"
                         />
                       </div>
                       <div>

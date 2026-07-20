@@ -33,7 +33,7 @@
     "app/layout.js",
     "app/page.jsx",
     "components/ui/button.jsx",
-    "components/ui/input.jsx",
+    "components/ui/input.tsx",
     "app/providers.js",
     "components/ui/sidebar.jsx"
 , "lib/utils.js"  ],

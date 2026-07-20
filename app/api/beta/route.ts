@@ -97,7 +97,7 @@ async function handleBetaSignup(request: NextRequest) {
       .insert({
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim(),
+        phone: phone.trim() ?? null,
         pettype: petType.trim(),
         city: city.trim(),
       })
