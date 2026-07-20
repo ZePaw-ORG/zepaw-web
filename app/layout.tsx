@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     'pet vaccination tracker',
     'ZePaw',
     'pet healthcare',
+    'pet passport',
   ],
   openGraph: {
     title: 'ZePaw — Every Pet Deserves an Identity',
