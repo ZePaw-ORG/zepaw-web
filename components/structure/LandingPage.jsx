@@ -73,8 +73,8 @@ const NAV = [
   { label: 'FAQ', href: '#faq' },
 ];
 
-const HERO_DOG =
-  'https://images.unsplash.com/photo-1561037404-61cd46aa615b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHw0fHxoYXBweSUyMGRvZ3xlbnwwfHx8fDE3ODQ0ODIwOTl8MA&ixlib=rb-4.1.0&q=85&w=600';
+const HERO_DOG = '/assets/cute-pug-landscape.png';
+const CARD_DOG = '/assets/cute-pug.png';
 const VERIFY_DOG =
   'https://images.pexels.com/photos/11106504/pexels-photo-11106504.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940';
 const CAT_IMG =
@@ -167,9 +167,9 @@ function Nav() {
         >
           <a href="#home" className="flex items-center gap-2 group" aria-label="ZePaw home">
             <img
-              src="/icon.png"
+              src="/assets/icon-transparent.png"
               alt="ZePaw"
-              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-[60px] w-auto object-contain transition-transform group-hover:scale-105"
             />
           </a>
           <nav className="hidden md:flex items-center gap-1">
@@ -311,7 +311,7 @@ function PhoneMockup() {
             <h3 className="text-lg font-bold text-[#111827]">Shiro's Card</h3>
             {/* Photo card */}
             <div className="mt-3 rounded-2xl overflow-hidden relative shadow-lg">
-              <img src={HERO_DOG} alt="Shiro" className="w-full h-40 object-cover" />
+              <img src={HERO_DOG} alt="Shiro" className="w-full h-40 object-cover object-top" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#153E75]/80 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-white">
                 <p className="text-[10px] font-medium opacity-80">ZePaw Identity</p>
@@ -358,7 +358,10 @@ function PhoneMockup() {
 // ---------- HERO ----------
 function Hero() {
   return (
-    <section id="home" className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
+    <section
+      id="home"
+      className="relative overflow-hidden pt-32 pb-20 mb-20 sm:pt-40 sm:pb-28 sm:mb-28"
+    >
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-mesh" />
       <motion.div
@@ -381,9 +384,7 @@ function Hero() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 mb-6"
             >
               <span className="w-2 h-2 rounded-full bg-[#14B8A6] animate-pulse" />
-              <span className="text-xs font-semibold text-[#153E75]">
-                Now in private beta • Coming soon
-              </span>
+              <span className="text-xs font-semibold text-[#153E75]">Coming soon</span>
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -391,7 +392,7 @@ function Hero() {
               transition={{ duration: 0.7, delay: 0.05 }}
               className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-[#111827]"
             >
-              Every Pet Deserves an <span className="text-gradient">Identity.</span>
+              The <span className="text-gradient">Smarter</span> Way to Care for Your Pet.
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -454,7 +455,7 @@ function Hero() {
 // ---------- Section wrapper ----------
 function Section({ id, eyebrow, title, subtitle, children, className = '' }) {
   return (
-    <section id={id} className={`relative py-20 sm:py-28 ${className}`}>
+    <section id={id} className={`relative pb-20 sm:pb-28 ${className}`}>
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -507,12 +508,12 @@ function IdentityCard() {
             </div>
             <div className="relative mt-6 flex items-center gap-4">
               <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg">
-                <img src={HERO_DOG} alt="Shiro" className="w-full h-full object-cover" />
+                <img src={CARD_DOG} alt="Shiro" className="w-full h-full object-cover" />
               </div>
               <div>
                 <p className="text-xs opacity-70 font-medium">Pet Name</p>
                 <h3 className="text-2xl font-bold">Shiro</h3>
-                <p className="text-xs opacity-80 mt-0.5">Golden Retriever</p>
+                <p className="text-xs opacity-80 mt-0.5">Pug</p>
               </div>
             </div>
             <div className="relative mt-5 pt-5 border-t border-white/15">
@@ -523,7 +524,7 @@ function IdentityCard() {
           {/* Body */}
           <div className="p-6 grid grid-cols-2 gap-4">
             <Info label="Species" value="Dog" />
-            <Info label="Breed" value="Golden Retriever" />
+            <Info label="Breed" value="Pug" />
             <Info label="Age" value="3 years" />
             <Info
               label="Vaccination"
@@ -782,7 +783,7 @@ function Vault() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.05 }}
-            className="group relative rounded-2xl bg-white p-6 border border-[#F8FAFC] hover:border-[#14B8A6]/30 hover:shadow-xl hover:shadow-[#14B8A6]/5 hover:-translate-y-1 transition-all"
+            className="flex flex-col items-center group relative rounded-2xl bg-white p-6 border border-[#F8FAFC] hover:border-[#14B8A6]/30 hover:shadow-xl hover:shadow-[#14B8A6]/5 hover:-translate-y-1 transition-all"
           >
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAFBF8] to-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
               <v.icon className="w-6 h-6 text-[#14B8A6]" />
@@ -813,7 +814,7 @@ function Timeline() {
   return (
     <Section
       eyebrow="Lifetime Health Timeline"
-      title="Every milestone. Beautifully documented."
+      title="Every record. Seamlessly documented."
       subtitle="Follow your pet's health story from the very first visit to every checkup that follows."
     >
       <div className="relative max-w-3xl mx-auto">
@@ -874,7 +875,7 @@ function Reminders() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.05 }}
-            className="group relative rounded-2xl overflow-hidden bg-white border border-[#F8FAFC] p-5 hover:shadow-xl transition-all"
+            className="group relative rounded-2xl overflow-hidden bg-white border border-[#F8FAFC] p-5 hover:shadow-xl transition-all flex flex-col items-center"
           >
             <div
               className={`w-12 h-12 rounded-xl bg-gradient-to-br ${r.color} flex items-center justify-center shadow-md`}
@@ -958,13 +959,13 @@ function Comparison() {
             <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
               <X className="w-5 h-5 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-[#6B7280]">Without ZePaw</h3>
+            <h3 className="text-lg font-bold text-black">Without ZePaw</h3>
           </div>
           <ul className="mt-6 space-y-3">
             {without.map((w) => (
               <li key={w} className="flex items-center gap-3 text-[#6B7280]">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-300" />
-                <span className="line-through decoration-red-300/60">{w}</span>
+                <span className="line-through decoration-red-600">{w}</span>
               </li>
             ))}
           </ul>
@@ -1099,13 +1100,13 @@ function Privacy() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: i * 0.05 }}
-            className="rounded-2xl bg-white border border-[#F8FAFC] p-6 hover:border-[#14B8A6]/30 transition-all"
+            className="rounded-2xl bg-white border border-[#F8FAFC] p-6 hover:border-[#14B8A6]/30 transition-all flex flex-col items-center"
           >
             <div className="w-11 h-11 rounded-xl bg-[#EAFBF8] flex items-center justify-center">
               <it.icon className="w-5 h-5 text-[#14B8A6]" />
             </div>
             <h4 className="mt-4 font-bold text-[#111827]">{it.title}</h4>
-            <p className="text-sm text-[#6B7280] mt-1">{it.text}</p>
+            <p className="text-sm text-[#6B7280] mt-1 text-center">{it.text}</p>
           </motion.div>
         ))}
       </div>
@@ -1160,7 +1161,7 @@ function BetaForm() {
   };
 
   return (
-    <section id="beta" className="relative py-20 sm:py-28 overflow-hidden">
+    <section id="beta" className="relative py-20 mb-20 sm:py-28 sm:mb-28 overflow-hidden">
       <div className="absolute inset-0 bg-mesh" />
       <motion.div
         animate={{ rotate: [0, 360] }}
@@ -1178,7 +1179,7 @@ function BetaForm() {
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EAFBF8] text-[#14B8A6] mb-4">
             Join the Beta
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#111827]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#111827] leading-[50px] sm:leading-[50px] lg:leading-[50px]">
             Be first to give your pet an <span className="text-gradient">identity.</span>
           </h2>
           <p className="mt-4 text-[#6B7280]">
@@ -1225,7 +1226,7 @@ function BetaForm() {
                     >
                       🎉 Thank you for enrolling!
                     </motion.h3>
-                    <motion.p
+                    {/* <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.9 }}
@@ -1235,7 +1236,7 @@ function BetaForm() {
                       <br />
                       Our team will review your submission and contact you soon with beta access and
                       future updates.
-                    </motion.p>
+                    </motion.p> */}
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1375,7 +1376,7 @@ function BetaForm() {
 const FAQS = [
   {
     q: 'What is a ZePaw Identity?',
-    a: 'A permanent, secure digital identity assigned to every pet — like a passport for your companion. It stays with them for life and can be verified anywhere.',
+    a: 'A permanent, secure digital identity assigned to every pet like a passport for your companion. It stays with them for life and can be verified anywhere.',
   },
   {
     q: 'How does verification work?',
@@ -1391,7 +1392,7 @@ const FAQS = [
   },
   {
     q: 'Is ZePaw only for dogs and cats?',
-    a: 'No. ZePaw is built for every pet — dogs, cats, birds, rabbits, hamsters, turtles, and exotic pets.',
+    a: 'No. ZePaw is built for every pet dogs, cats, birds, rabbits, hamsters, turtles, and exotic pets.',
   },
 ];
 function FAQ() {
@@ -1437,36 +1438,31 @@ function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2">
               <img
-                src="/zepaw-logo.png"
+                src="/assets/icon-transparent.png"
                 alt="ZePaw"
-                className="h-12 w-auto object-contain bg-white rounded-xl p-1.5"
+                className="h-[60px] w-auto object-contain bg-white rounded-xl "
               />
             </div>
             <p className="mt-4 text-sm text-white/60 max-w-sm leading-relaxed">
-              Creating the digital identity standard for pets. Every pet gets a permanent identity —
+              Creating the digital identity standard for pets. Every pet gets a permanent identity
               verifiable anywhere, secured for life.
             </p>
             <div className="mt-6 flex gap-3">
               <a
-                href="#"
+                href="https://www.instagram.com/zepaw.official"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
+                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
+                target="_blank"
               >
                 {/* <Instagram className="w-4 h-4" /> */}
+                <i className="fa-brands fa-instagram"></i>
               </a>
               <a
-                href="#"
-                aria-label="LinkedIn"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
-              >
-                {/* <Linkedin className="w-4 h-4" /> */}
-              </a>
-              <a
-                href="mailto:hello@zepaw.io"
+                href="mailto:hello@zepaw.in"
                 aria-label="Email"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors"
+                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
               >
-                <Mail className="w-4 h-4" />
+                <i className="fa-regular fa-envelope"></i>
               </a>
             </div>
           </div>
@@ -1479,7 +1475,7 @@ function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="mailto:support@zepaw.in" className="hover:text-white transition-colors">
                   Contact
                 </a>
               </li>
@@ -1490,7 +1486,7 @@ function Footer() {
               </li>
             </ul>
           </div>
-          <div>
+          {/* <div>
             <h4 className="text-sm font-bold uppercase tracking-wider text-white/50">Legal</h4>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
               <li>
@@ -1504,7 +1500,7 @@ function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
           <p>© {new Date().getFullYear()} ZePaw. All rights reserved.</p>
@@ -1527,11 +1523,10 @@ function LandingPage() {
             One Pet. <span className="text-gradient">One Identity.</span> Anywhere.
           </>
         }
-        subtitle="Every pet receives a permanent ZePaw Identity — a passport for their entire life. Verify anywhere. Recognised everywhere."
+        subtitle="Every pet receives a permanent ZePaw Identity a passport for their entire life. Verify anywhere. Recognised everywhere."
       >
         <IdentityCard />
       </Section>
-      {/* <VerifySection /> */}
       <Vault />
       <Timeline />
       <Reminders />

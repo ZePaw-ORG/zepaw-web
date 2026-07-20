@@ -33,6 +33,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={jakarta.variable}>
+      <head>
+        <script src="https://kit.fontawesome.com/9430fba654.js" crossOrigin="anonymous"></script>
+      </head>
       <body className="font-sans antialiased bg-white text-[#111827] scroll-smooth">
         {children}
         <Toaster position="top-center" richColors />
