@@ -30,7 +30,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "components/ui/sonner.jsx",
-    "app/layout.js",
+    "app/layout.tsx",
     "app/page.jsx",
     "components/ui/button.jsx",
     "components/ui/input.tsx",
