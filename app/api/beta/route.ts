@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
 // In-memory rate limiter (per IP)
 const rateStore = new Map();
 const RATE_LIMIT = 5; // requests
 const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+const tableName = process.env.TABLE_NAME ?? '';
 
-function rateLimit(ip) {
+function rateLimit(ip: string) {
   const now = Date.now();
   const record = rateStore.get(ip) || { count: 0, start: now };
   if (now - record.start > RATE_WINDOW_MS) {
@@ -17,17 +20,17 @@ function rateLimit(ip) {
   return record.count <= RATE_LIMIT;
 }
 
-function getIp(request) {
+function getIp(request: NextRequest) {
   const fwd = request.headers.get('x-forwarded-for');
   if (fwd) return fwd.split(',')[0].trim();
   return request.headers.get('x-real-ip') || 'unknown';
 }
 
-function isValidEmail(email) {
+function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
 }
 
-async function handleBetaSignup(request) {
+async function handleBetaSignup(request: NextRequest) {
   const ip = getIp(request);
   if (!rateLimit(ip)) {
     return NextResponse.json(
@@ -35,9 +38,11 @@ async function handleBetaSignup(request) {
       { status: 429 }
     );
   }
-
+  let supabase;
   let body;
   try {
+    const cookieStore = await cookies();
+    supabase = await createClient(cookieStore);
     body = await request.json();
   } catch {
     return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
@@ -73,61 +78,33 @@ async function handleBetaSignup(request) {
     return NextResponse.json({ success: false, error: 'Please enter your city.' }, { status: 400 });
   }
 
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) {
-    console.error('DISCORD_WEBHOOK_URL is not configured');
+  // Avoid duplicate entries with check on email
+  const { data: emailFound, error } = await supabase.from(tableName).select().eq('email', email);
+
+  if (emailFound?.length) {
     return NextResponse.json(
-      { success: false, error: 'Server not configured. Please try again later.' },
-      { status: 500 }
+      {
+        success: false,
+        error: 'This email is already on our beta waitlist.',
+      },
+      { status: 409 }
     );
   }
 
-  const timestamp = new Date().toISOString();
-  const content = [
-    '🐾 **New ZePaw Beta Signup**',
-    '',
-    `**Name:**\n${name.trim()}`,
-    '',
-    `**Email:**\n${email.trim()}`,
-    '',
-    `**Phone:**\n${phone && phone.trim() ? phone.trim() : 'Not provided'}`,
-    '',
-    `**Pet Type:**\n${petType}`,
-    '',
-    `**City:**\n${city.trim()}`,
-    '',
-    `**Submitted At:**\n${timestamp}`,
-  ].join('\n');
-
   try {
-    const res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: 'ZePaw Beta',
-        content,
-        embeds: [
-          {
-            title: '🐾 New ZePaw Beta Signup',
-            color: 0x14b8a6,
-            fields: [
-              { name: 'Name', value: name.trim(), inline: true },
-              { name: 'Email', value: email.trim(), inline: true },
-              { name: 'Phone', value: phone && phone.trim() ? phone.trim() : 'N/A', inline: true },
-              { name: 'Pet Type', value: petType, inline: true },
-              { name: 'City', value: city.trim(), inline: true },
-              { name: 'Submitted At', value: timestamp, inline: false },
-            ],
-            footer: { text: 'ZePaw — Every Pet Deserves an Identity' },
-            timestamp,
-          },
-        ],
-      }),
-    });
+    const { error } = await supabase
+      .from(tableName)
+      .insert({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        pettype: petType.trim(),
+        city: city.trim(),
+      })
+      .select();
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      console.error('Discord webhook failed:', res.status, text);
+    if (error) {
+      console.error('Something went wrong- ', error);
       return NextResponse.json(
         { success: false, error: 'Could not submit right now. Please try again.' },
         { status: 502 }
@@ -144,18 +121,10 @@ async function handleBetaSignup(request) {
   }
 }
 
-export async function GET(request, { params }) {
-  const p = (params?.path || []).join('/');
-  if (p === 'health' || p === '') {
-    return NextResponse.json({ status: 'ok', service: 'ZePaw API' });
-  }
-  return NextResponse.json({ error: 'Not found' }, { status: 404 });
-}
-
-export async function POST(request, { params }) {
-  const p = (params?.path || []).join('/');
-  if (p === 'beta' || p === 'beta-signup') {
+export async function POST(request: NextRequest) {
+  try {
     return handleBetaSignup(request);
+  } catch (err) {
+    return NextResponse.json({ error: `Something went wrong: ${err}` }, { status: 500 });
   }
-  return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
