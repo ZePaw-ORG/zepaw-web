@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/utils/supabase/admin';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -38,11 +38,9 @@ async function handleBetaSignup(request: NextRequest) {
       { status: 429 }
     );
   }
-  let supabase;
   let body;
   try {
     const cookieStore = await cookies();
-    supabase = await createClient(cookieStore);
     body = await request.json();
   } catch {
     return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
@@ -79,7 +77,7 @@ async function handleBetaSignup(request: NextRequest) {
   }
 
   // Avoid duplicate entries with check on email
-  const { data: emailFound, error } = await supabase.from(tableName).select().eq('email', email);
+  const { data: emailFound } = await supabaseAdmin.from(tableName).select().eq('email', email);
 
   if (emailFound?.length) {
     return NextResponse.json(
@@ -92,7 +90,7 @@ async function handleBetaSignup(request: NextRequest) {
   }
 
   try {
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from(tableName)
       .insert({
         name: name.trim(),
