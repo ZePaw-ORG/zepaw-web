@@ -13,6 +13,10 @@ const queryClient = new QueryClient({
   },
 });
 
-export function Providers({ children }) {
+interface ProvidersProps {
+  children: React.ReactNode;
+}
+
+export function Providers({ children }: Readonly<ProvidersProps>) {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

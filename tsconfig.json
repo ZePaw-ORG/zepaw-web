@@ -31,10 +31,10 @@
     "**/*.mts",
     "components/ui/sonner.jsx",
     "app/layout.tsx",
-    "app/page.jsx",
+    "app/page.tsx",
     "components/ui/button.jsx",
     "components/ui/input.tsx",
-    "app/providers.js",
+    "app/providers.tsx",
     "components/ui/sidebar.jsx"
 , "lib/utils.js"  ],
   "exclude": ["node_modules"]
