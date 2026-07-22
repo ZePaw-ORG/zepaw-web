@@ -35,7 +35,9 @@
     "components/ui/button.jsx",
     "components/ui/input.tsx",
     "app/providers.tsx",
-    "components/ui/sidebar.jsx"
-, "lib/utils.js"  ],
+    "components/ui/sidebar.jsx",
+    "lib/utils.js",
+    "components/structure/LandingPage.jsx"
+  ],
   "exclude": ["node_modules"]
 }
