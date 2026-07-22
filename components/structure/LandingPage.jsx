@@ -236,7 +236,7 @@ function Nav() {
 // ---------- HERO MOCKUP (phone) ----------
 function PhoneMockup() {
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 30, rotateY: -8 }}
       animate={{ opacity: 1, y: 0, rotateY: 0 }}
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
@@ -351,7 +351,7 @@ function PhoneMockup() {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -377,38 +377,18 @@ function Hero() {
       <div className="relative container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 mb-6"
-            >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 mb-6">
               <span className="w-2 h-2 rounded-full bg-[#14B8A6] animate-pulse" />
               <span className="text-xs font-semibold text-[#153E75]">Coming soon</span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.05 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-[#111827]"
-            >
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-[#111827]">
               The <span className="text-gradient">Smarter</span> Way to Care for Your Pet.
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="mt-6 text-lg text-[#6B7280] max-w-xl leading-relaxed"
-            >
+            </h1>
+            <p className="mt-6 text-lg text-[#6B7280] max-w-xl leading-relaxed">
               ZePaw gives every pet a permanent digital identity where pet parents can securely
               manage lifelong health records, vaccinations, documents, and important information.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25 }}
-              className="mt-8 flex flex-wrap gap-3"
-            >
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="#beta"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white font-semibold bg-gradient-to-r from-[#153E75] to-[#14B8A6] shadow-xl shadow-[#14B8A6]/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all"
@@ -422,13 +402,8 @@ function Hero() {
               >
                 Learn More
               </a>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="mt-10 flex items-center gap-6 text-[#6B7280] text-xs"
-            >
+            </div>
+            <div className="mt-10 flex items-center gap-6 text-[#6B7280] text-xs">
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[#14B8A6]" />
                 <span>Encrypted</span>
@@ -441,7 +416,7 @@ function Hero() {
                 <Cloud className="w-4 h-4 text-[#14B8A6]" />
                 <span>Cloud secure</span>
               </div>
-            </motion.div>
+            </div>
           </div>
           <div className="relative">
             <PhoneMockup />
@@ -457,13 +432,7 @@ function Section({ id, eyebrow, title, subtitle, children, className = '' }) {
   return (
     <section id={id} className={`relative pb-20 sm:pb-28 ${className}`}>
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7 }}
-          className="max-w-3xl mx-auto text-center mb-14"
-        >
+        <div className="max-w-3xl mx-auto text-center mb-14">
           {eyebrow && (
             <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EAFBF8] text-[#14B8A6] mb-4">
               {eyebrow}
@@ -473,7 +442,7 @@ function Section({ id, eyebrow, title, subtitle, children, className = '' }) {
             {title}
           </h2>
           {subtitle && <p className="mt-5 text-lg text-[#6B7280] leading-relaxed">{subtitle}</p>}
-        </motion.div>
+        </div>
         {children}
       </div>
     </section>
@@ -483,13 +452,7 @@ function Section({ id, eyebrow, title, subtitle, children, className = '' }) {
 // ---------- Identity Card (section 2) ----------
 function IdentityCard() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8 }}
-      className="max-w-md mx-auto"
-    >
+    <div className="max-w-md mx-auto">
       <div className="relative rounded-[2rem] bg-gradient-to-br from-[#153E75] via-[#1E4F8A] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/25">
         <div className="rounded-[calc(2rem-2px)] bg-white overflow-hidden">
           {/* Header */}
@@ -548,7 +511,7 @@ function IdentityCard() {
       <p className="text-center text-sm text-[#6B7280] mt-5">
         This identity stays with your pet for their entire life.
       </p>
-    </motion.div>
+    </div>
   );
 }
 function Info({ label, value, accent, icon }) {
@@ -569,195 +532,6 @@ function Info({ label, value, accent, icon }) {
   );
 }
 
-// ---------- Verify Section ----------
-// function VerifySection() {
-//   const [id, setId] = useState('ZP-8471-B92');
-//   const [verified, setVerified] = useState(true);
-//   const [scanning, setScanning] = useState(false);
-
-//   const runVerify = () => {
-//     setScanning(true);
-//     setVerified(false);
-//     setTimeout(() => {
-//       setScanning(false);
-//       setVerified(true);
-//     }, 1200);
-//   };
-
-//   return (
-//     <Section
-//       id="verify"
-//       eyebrow="Verify Anywhere"
-//       title="Verify any ZePaw Identity."
-//       subtitle="Enter an ID or scan the QR code. Only owner-approved information is publicly visible — private medical records remain fully secure."
-//     >
-//       <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-//         {/* Input side */}
-//         <motion.div
-//           initial={{ opacity: 0, x: -30 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 0.6 }}
-//           className="rounded-3xl bg-white border border-[#F8FAFC] p-8 shadow-xl shadow-[#153E75]/5"
-//         >
-//           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAFBF8] text-[#14B8A6] text-xs font-semibold mb-5">
-//             <ScanLine className="w-3.5 h-3.5" /> Live Verification
-//           </div>
-//           <h3 className="text-2xl font-bold text-[#111827]">Enter a ZePaw Identity</h3>
-//           <p className="text-[#6B7280] text-sm mt-2">
-//             Try our sample: <code className="font-mono text-[#153E75]">ZP-8471-B92</code>
-//           </p>
-//           <div className="mt-5 flex gap-2">
-//             <Input
-//               value={id}
-//               onChange={(e) => setId(e.target.value)}
-//               placeholder="ZP-XXXX-XXX"
-//               className="h-12 rounded-xl border-[#E5E7EB] font-mono tracking-widest"
-//             />
-//             <Button
-//               onClick={runVerify}
-//               className="h-12 rounded-xl bg-gradient-to-r from-[#153E75] to-[#14B8A6] hover:opacity-90 text-white font-semibold px-6"
-//             >
-//               Verify
-//             </Button>
-//           </div>
-//           <div className="mt-6 flex items-center gap-3 text-xs text-[#6B7280]">
-//             <div className="flex-1 h-px bg-[#F8FAFC]" />
-//             <span>or</span>
-//             <div className="flex-1 h-px bg-[#F8FAFC]" />
-//           </div>
-//           <button
-//             onClick={runVerify}
-//             className="mt-6 w-full rounded-2xl border-2 border-dashed border-[#153E75]/20 hover:border-[#14B8A6] hover:bg-[#EAFBF8]/40 transition-all p-6 flex items-center gap-4 group"
-//           >
-//             <div className="w-14 h-14 rounded-xl bg-[#EAFBF8] flex items-center justify-center group-hover:scale-110 transition-transform">
-//               <QrCode className="w-6 h-6 text-[#14B8A6]" />
-//             </div>
-//             <div className="text-left flex-1">
-//               <p className="font-bold text-[#111827]">Scan a QR Code</p>
-//               <p className="text-xs text-[#6B7280]">Point your camera at any ZePaw tag</p>
-//             </div>
-//             <ArrowRight className="w-5 h-5 text-[#6B7280] group-hover:text-[#14B8A6] group-hover:translate-x-1 transition-all" />
-//           </button>
-//         </motion.div>
-
-//         {/* Result side */}
-//         <motion.div
-//           initial={{ opacity: 0, x: 30 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 0.6 }}
-//           className="relative rounded-3xl bg-gradient-to-br from-[#153E75] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/20"
-//         >
-//           <div className="rounded-[calc(1.5rem-2px)] bg-white p-6 h-full">
-//             <AnimatePresence mode="wait">
-//               {scanning ? (
-//                 <motion.div
-//                   key="scanning"
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   exit={{ opacity: 0 }}
-//                   className="flex flex-col items-center justify-center h-full py-16"
-//                 >
-//                   <Loader2 className="w-10 h-10 text-[#14B8A6] animate-spin" />
-//                   <p className="mt-4 text-sm font-semibold text-[#153E75]">Verifying identity…</p>
-//                 </motion.div>
-//               ) : verified ? (
-//                 <motion.div
-//                   key="verified"
-//                   initial={{ opacity: 0, y: 10 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                   exit={{ opacity: 0 }}
-//                 >
-//                   <div className="flex items-center justify-between">
-//                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EAFBF8] text-[#14B8A6]">
-//                       <BadgeCheck className="w-4 h-4" />
-//                       <span className="text-xs font-bold">Verified</span>
-//                     </div>
-//                     <span className="text-xs text-[#6B7280] font-mono">{id}</span>
-//                   </div>
-//                   <div className="mt-5 flex items-center gap-4">
-//                     <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-[#EAFBF8]">
-//                       <img
-//                         src={VERIFY_DOG}
-//                         alt="Verified pet"
-//                         className="w-full h-full object-cover"
-//                       />
-//                     </div>
-//                     <div>
-//                       <h3 className="text-2xl font-bold text-[#111827]">Shiro</h3>
-//                       <p className="text-sm text-[#6B7280]">Golden Retriever • 3 yrs</p>
-//                       <p className="text-xs text-[#14B8A6] font-semibold mt-1">Male • Neutered</p>
-//                     </div>
-//                   </div>
-//                   <div className="mt-6 space-y-3">
-//                     <Row
-//                       icon={<Syringe className="w-4 h-4" />}
-//                       label="Vaccination Status"
-//                       value="Up to date"
-//                       good
-//                     />
-//                     <Row
-//                       icon={<Phone className="w-4 h-4" />}
-//                       label="Emergency Contact"
-//                       value="+91 98••••2170"
-//                       badge="Shared by owner"
-//                     />
-//                     <Row
-//                       icon={<Lock className="w-4 h-4" />}
-//                       label="Medical Records"
-//                       value="Private"
-//                       muted
-//                     />
-//                   </div>
-//                   <div className="mt-5 p-3 rounded-xl bg-[#F8FAFC] flex items-start gap-2">
-//                     <ShieldCheck className="w-4 h-4 text-[#14B8A6] mt-0.5 shrink-0" />
-//                     <p className="text-xs text-[#6B7280] leading-relaxed">
-//                       Only information shared by the owner is publicly visible. Sensitive medical
-//                       records remain encrypted and private.
-//                     </p>
-//                   </div>
-//                 </motion.div>
-//               ) : null}
-//             </AnimatePresence>
-//           </div>
-//         </motion.div>
-//       </div>
-//     </Section>
-//   );
-// }
-
-// function Row({ icon, label, value, good, muted, badge }) {
-//   return (
-//     <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC]">
-//       <div className="flex items-center gap-3">
-//         <div
-//           className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-//             good
-//               ? 'bg-[#EAFBF8] text-[#14B8A6]'
-//               : muted
-//                 ? 'bg-white text-[#6B7280]'
-//                 : 'bg-white text-[#153E75]'
-//           }`}
-//         >
-//           {icon}
-//         </div>
-//         <div>
-//           <p className="text-[11px] text-[#6B7280] font-medium">{label}</p>
-//           <p className={`text-sm font-bold ${muted ? 'text-[#6B7280]' : 'text-[#111827]'}`}>
-//             {value}
-//           </p>
-//         </div>
-//       </div>
-//       {badge && (
-//         <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-white text-[#14B8A6]">
-//           {badge}
-//         </span>
-//       )}
-//     </div>
-//   );
-// }
-
 // ---------- Vault (section 4) ----------
 const VAULT_ITEMS = [
   { icon: FileText, title: 'Prescriptions', desc: 'All vet prescriptions in one place.' },
@@ -777,12 +551,8 @@ function Vault() {
     >
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
         {VAULT_ITEMS.map((v, i) => (
-          <motion.div
+          <div
             key={v.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.05 }}
             className="flex flex-col items-center group relative rounded-2xl bg-white p-6 border border-[#F8FAFC] hover:border-[#14B8A6]/30 hover:shadow-xl hover:shadow-[#14B8A6]/5 hover:-translate-y-1 transition-all"
           >
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAFBF8] to-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
@@ -790,7 +560,7 @@ function Vault() {
             </div>
             <h3 className="mt-4 font-bold text-[#111827] text-lg">{v.title}</h3>
             <p className="text-sm text-[#6B7280] mt-1">{v.desc}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
       <div className="mt-10 flex items-center justify-center gap-2 text-sm text-[#6B7280]">
@@ -820,12 +590,8 @@ function Timeline() {
       <div className="relative max-w-3xl mx-auto">
         <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-[#14B8A6]/0 via-[#14B8A6]/40 to-[#14B8A6]/0" />
         {TIMELINE.map((t, i) => (
-          <motion.div
+          <div
             key={t.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.08 }}
             className={`relative flex sm:items-center mb-8 sm:mb-6 ${
               i % 2 === 0 ? 'sm:justify-start' : 'sm:justify-end'
             }`}
@@ -844,7 +610,7 @@ function Timeline() {
             <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white border-2 border-[#14B8A6] flex items-center justify-center shadow-lg z-10">
               <t.icon className="w-5 h-5 text-[#14B8A6]" />
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </Section>
@@ -869,12 +635,8 @@ function Reminders() {
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
         {REMINDERS.map((r, i) => (
-          <motion.div
+          <div
             key={r.title}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.05 }}
             className="group relative rounded-2xl overflow-hidden bg-white border border-[#F8FAFC] p-5 hover:shadow-xl transition-all flex flex-col items-center"
           >
             <div
@@ -887,7 +649,7 @@ function Reminders() {
               <Bell className="w-3 h-3" />
               <span>Auto reminders</span>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </Section>
@@ -913,19 +675,15 @@ function PetParents() {
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
         {PETS.map((p, i) => (
-          <motion.div
+          <div
             key={p.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
             className="rounded-2xl bg-white border border-[#F8FAFC] p-5 flex flex-col items-center hover:border-[#14B8A6]/40 hover:bg-[#EAFBF8]/30 hover:-translate-y-1 transition-all"
           >
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EAFBF8] to-white flex items-center justify-center">
               <p.icon className="w-7 h-7 text-[#14B8A6]" />
             </div>
             <span className="mt-3 font-semibold text-sm text-[#111827]">{p.label}</span>
-          </motion.div>
+          </div>
         ))}
       </div>
     </Section>
@@ -1094,12 +852,8 @@ function Privacy() {
     >
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {items.map((it, i) => (
-          <motion.div
+          <div
             key={it.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
             className="rounded-2xl bg-white border border-[#F8FAFC] p-6 hover:border-[#14B8A6]/30 transition-all flex flex-col items-center"
           >
             <div className="w-11 h-11 rounded-xl bg-[#EAFBF8] flex items-center justify-center">
@@ -1107,7 +861,7 @@ function Privacy() {
             </div>
             <h4 className="mt-4 font-bold text-[#111827]">{it.title}</h4>
             <p className="text-sm text-[#6B7280] mt-1 text-center">{it.text}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </Section>
@@ -1169,13 +923,7 @@ function BetaForm() {
         className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#14B8A6]/10 to-[#153E75]/10 blur-3xl"
       />
       <div className="relative container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="max-w-xl mx-auto text-center mb-10"
-        >
+        <div className="max-w-xl mx-auto text-center mb-10">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EAFBF8] text-[#14B8A6] mb-4">
             Join the Beta
           </span>
@@ -1185,7 +933,7 @@ function BetaForm() {
           <p className="mt-4 text-[#6B7280]">
             Get early access to ZePaw and help shape the future of pet healthcare.
           </p>
-        </motion.div>
+        </div>
 
         <div className="max-w-xl mx-auto">
           <div className="relative rounded-3xl bg-gradient-to-br from-[#153E75] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/20">
@@ -1226,17 +974,6 @@ function BetaForm() {
                     >
                       🎉 Thank you for enrolling!
                     </motion.h3>
-                    {/* <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.9 }}
-                      className="mt-3 text-[#6B7280] leading-relaxed"
-                    >
-                      We've successfully received your application.
-                      <br />
-                      Our team will review your submission and contact you soon with beta access and
-                      future updates.
-                    </motion.p> */}
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1486,21 +1223,6 @@ function Footer() {
               </li>
             </ul>
           </div>
-          {/* <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-white/50">Legal</h4>
-            <ul className="mt-4 space-y-2 text-sm text-white/70">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Terms &amp; Conditions
-                </a>
-              </li>
-            </ul>
-          </div> */}
         </div>
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
           <p>© {new Date().getFullYear()} ZePaw. All rights reserved.</p>
