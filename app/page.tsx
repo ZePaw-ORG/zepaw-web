@@ -1,12 +1,13 @@
 import LandingPage from '@/components/structure/LandingPage';
 
-// ---------- Root ----------
-async function App() {
+export default function Page() {
   return (
-    <main className="relative min-h-screen bg-white overflow-x-hidden">
+    // overflow-x-clip, not -hidden: `hidden` turns this into a scroll
+    // container and silently breaks `position: sticky` for everything
+    // inside it (the pinned record in the register). `clip` contains
+    // overflow without creating a scroll container.
+    <main className="relative z-10 min-h-screen overflow-x-clip">
       <LandingPage />
     </main>
   );
 }
-
-export default App;

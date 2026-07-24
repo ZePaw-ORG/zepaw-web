@@ -1,63 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useState, useRef, useId, useEffect } from 'react';
 import {
-  PawPrint,
-  ShieldCheck,
-  QrCode,
-  Syringe,
-  FileText,
-  FlaskConical,
-  Receipt,
-  Shield,
-  Award,
-  Bell,
-  Calendar,
-  Scissors,
-  Heart,
-  Stethoscope,
-  Activity,
-  Cake,
-  Dog,
-  Cat,
-  Bird,
-  Rabbit,
-  Turtle,
-  Sparkles,
-  Check,
-  X,
-  ChevronDown,
-  Menu,
-  Lock,
-  Cloud,
-  Building2,
-  Landmark,
-  Microscope,
-  Store,
-  Siren,
-  Brain,
-  ArrowRight,
-  Loader2,
-  // Instagram,
-  // Linkedin,
-  Mail,
-  MapPin,
-  Phone,
-  User,
-  ScanLine,
-  BadgeCheck,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+  useReducedMotion,
+  MotionConfig,
+} from 'framer-motion';
 import {
   Accordion,
   AccordionContent,
@@ -65,1076 +17,977 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { IdentityCard } from './IdentityCard';
+import { Vault } from './Vault';
+import { EveryPet } from './EveryPet';
+import { Rise, Seal, Mark, SceneNum, EASE, useTilt } from './registry';
 
 const NAV = [
-  { label: 'Home', href: '#home' },
-  { label: 'Features', href: '#features' },
-  { label: 'Roadmap', href: '#roadmap' },
-  { label: 'FAQ', href: '#faq' },
+  ['The record', '#record'],
+  ['Vault', '#vault'],
+  ['Timeline', '#ledger'],
+  ['Verify', '#verify'],
+  ['Questions', '#faq'],
 ];
 
-const HERO_DOG = '/assets/cute-pug-landscape.png';
-const CARD_DOG = '/assets/cute-pug.png';
-const VERIFY_DOG =
-  'https://images.pexels.com/photos/11106504/pexels-photo-11106504.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940';
-const CAT_IMG =
-  'https://images.unsplash.com/photo-1573865526739-10659fec78a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwzfHxjdXRlJTIwY2F0fGVufDB8fHx8MTc4NDQ4MjA5OXww&ixlib=rb-4.1.0&q=85&w=500';
-
-// ---------- QR (pure SVG, no deps) ----------
-function QRPattern({ size = 120, className = '' }) {
-  // A stylised static QR-like pattern (decorative). Deterministic layout.
-  const cells = 21;
-  const cellSize = size / cells;
-  const grid = [];
-  // Seeded pseudo pattern
-  let seed = 42;
-  const rnd = () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  };
-  for (let y = 0; y < cells; y++) {
-    for (let x = 0; x < cells; x++) {
-      // Reserve finder patterns corners
-      const inFinder = (x < 7 && y < 7) || (x >= cells - 7 && y < 7) || (x < 7 && y >= cells - 7);
-      if (inFinder) continue;
-      if (rnd() > 0.55) {
-        grid.push(
-          <rect
-            key={`${x}-${y}`}
-            x={x * cellSize}
-            y={y * cellSize}
-            width={cellSize}
-            height={cellSize}
-            rx={cellSize * 0.15}
-            fill="#111827"
-          />
-        );
-      }
-    }
-  }
-  const Finder = ({ cx, cy }) => (
-    <g transform={`translate(${cx * cellSize}, ${cy * cellSize})`}>
-      <rect width={cellSize * 7} height={cellSize * 7} rx={cellSize} fill="#111827" />
-      <rect
-        x={cellSize}
-        y={cellSize}
-        width={cellSize * 5}
-        height={cellSize * 5}
-        rx={cellSize * 0.6}
-        fill="#fff"
-      />
-      <rect
-        x={cellSize * 2}
-        y={cellSize * 2}
-        width={cellSize * 3}
-        height={cellSize * 3}
-        rx={cellSize * 0.4}
-        fill="#153E75"
-      />
-    </g>
-  );
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={className}>
-      <rect width={size} height={size} rx={size * 0.08} fill="#fff" />
-      {grid}
-      <Finder cx={0} cy={0} />
-      <Finder cx={cells - 7} cy={0} />
-      <Finder cx={0} cy={cells - 7} />
-    </svg>
-  );
-}
-
-// ---------- NAV ----------
+/* ==================================================================
+   NAV — contained, responds to scroll, no default flush bar
+   ================================================================== */
 function Nav() {
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const [condensed, setCondensed] = useState(false);
+  const { scrollY } = useScroll();
+  const line = useTransform(scrollY, [60, 140], [0, 1]);
+
+  // Threshold toggle rather than a per-frame padding animation: padding is a
+  // layout property, so animating it on every scroll frame forces reflow.
+  useMotionValueEvent(scrollY, 'change', (v) => setCondensed(v > 90));
+
   return (
-    <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? 'py-2' : 'py-4'
-      }`}
-    >
-      <div className="container mx-auto px-4">
-        <div
-          className={`glass rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between transition-all ${
-            scrolled ? 'shadow-lg shadow-[#153E75]/5' : ''
-          }`}
-        >
-          <a href="#home" className="flex items-center gap-2 group" aria-label="ZePaw home">
+    <>
+      <header
+        // Keep the header and its close button above the menu surface. The
+        // menu itself sits above all page content, including sticky sections.
+        className={`fixed inset-x-0 top-0 z-[70] transition-[padding] duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
+          open ? 'bg-transparent' : 'bg-paper/85 backdrop-blur-[6px]'
+        } ${condensed ? 'py-3' : 'py-6'}`}
+      >
+        <motion.div
+          style={{ scaleX: line }}
+          className="absolute inset-x-0 bottom-0 h-px origin-left bg-ink/20"
+        />
+        <div className="mx-auto flex max-w-[78rem] items-center justify-between px-5 sm:px-8">
+          <a href="#home" className="flex items-center gap-2.5" aria-label="ZePaw, home">
             <img
-              src="/assets/icon-transparent.png"
-              alt="ZePaw"
-              className="h-[60px] w-auto object-contain transition-transform group-hover:scale-105"
+              src="/assets/mark.png"
+              alt=""
+              width={240}
+              height={240}
+              className="h-8 w-8 object-contain"
             />
+            <span className="font-display text-[1.35rem] leading-none tracking-tight">ZePaw</span>
           </a>
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV.map((n) => (
+
+          <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+            {NAV.map(([label, href]) => (
               <a
-                key={n.href}
-                href={n.href}
-                className="px-4 py-2 text-sm font-medium text-[#6B7280] hover:text-[#153E75] transition-colors rounded-lg hover:bg-white/60"
+                key={href}
+                href={href}
+                className="text-[0.84rem] text-ink-soft transition-colors duration-300 hover:text-ink"
               >
-                {n.label}
+                {label}
               </a>
             ))}
-          </nav>
-          <div className="flex items-center gap-2">
             <a
               href="#beta"
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#153E75] to-[#14B8A6] shadow-lg shadow-[#14B8A6]/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="group relative inline-flex items-center gap-2 bg-ink px-4 py-2 text-[0.84rem] text-stock transition-colors duration-300 hover:bg-seal-deep"
             >
-              Join Beta
-              <ArrowRight className="w-4 h-4" />
+              Request an identity
+              <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+                <path
+                  d="M2.5 9.5 9.5 2.5M4.2 2.5h5.3v5.3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform duration-300 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[2px]"
+                />
+              </svg>
             </a>
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-white/60"
-              onClick={() => setOpen(!open)}
-              aria-label="menu"
-            >
-              <Menu className="w-5 h-5 text-[#153E75]" />
-            </button>
-          </div>
+          </nav>
+
+          {/* Hamburger that morphs to an X */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            className="relative z-[80] flex h-11 w-11 shrink-0 cursor-pointer touch-manipulation items-center justify-center md:hidden"
+          >
+            <span
+              className={`absolute left-1/2 top-1/2 block h-px w-5 -translate-x-1/2 bg-ink transition-transform duration-500 ${
+                open ? 'rotate-45' : '-translate-y-[4px]'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.22,1,0.36,1)' }}
+            />
+            <span
+              className={`absolute left-1/2 top-1/2 block h-px w-5 -translate-x-1/2 bg-ink transition-transform duration-500 ${
+                open ? '-rotate-45' : 'translate-y-[4px]'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.22,1,0.36,1)' }}
+            />
+          </button>
         </div>
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="md:hidden mt-2 glass rounded-2xl p-2 flex flex-col"
-            >
-              {NAV.map((n) => (
-                <a
-                  key={n.href}
-                  href={n.href}
+      </header>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            id="mobile-nav"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="pointer-events-auto fixed inset-0 z-[60] bg-paper px-5 pt-28 md:hidden"
+          >
+            <nav aria-label="Mobile">
+              {NAV.map(([label, href], i) => (
+                <motion.a
+                  key={href}
+                  href={href}
                   onClick={() => setOpen(false)}
-                  className="px-4 py-3 text-sm font-medium text-[#111827] hover:bg-white/70 rounded-xl"
+                  initial={{ y: 26 }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.6, ease: EASE, delay: 0.05 + i * 0.05 }}
+                  className="block border-b border-ink/12 py-5 font-display text-3xl"
                 >
-                  {n.label}
-                </a>
+                  {label}
+                </motion.a>
               ))}
-              <a
+              <motion.a
                 href="#beta"
                 onClick={() => setOpen(false)}
-                className="mt-1 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#153E75] to-[#14B8A6] rounded-xl text-center"
+                initial={{ y: 26 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.6, ease: EASE, delay: 0.25 }}
+                className="mt-8 block bg-ink px-5 py-4 text-center text-stock"
               >
-                Join Beta
-              </a>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </header>
+                Request an identity
+              </motion.a>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
-// ---------- HERO MOCKUP (phone) ----------
-function PhoneMockup() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30, rotateY: -8 }}
-      animate={{ opacity: 1, y: 0, rotateY: 0 }}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-      className="relative w-[280px] sm:w-[320px] mx-auto"
-      style={{ perspective: 1200 }}
-    >
-      {/* Floating cards */}
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -left-16 sm:-left-24 top-16 z-20 glass rounded-2xl p-3 shadow-xl shadow-[#153E75]/10 hidden sm:block"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#EAFBF8] flex items-center justify-center">
-            <ShieldCheck className="w-4 h-4 text-[#14B8A6]" />
-          </div>
-          <div>
-            <p className="text-[10px] text-[#6B7280] font-medium">Verified</p>
-            <p className="text-xs font-bold text-[#111827]">Vaccinations ✓</p>
-          </div>
-        </div>
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        className="absolute -right-10 sm:-right-20 top-40 z-20 glass rounded-2xl p-3 shadow-xl shadow-[#153E75]/10 hidden sm:block"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#EAFBF8] flex items-center justify-center">
-            <QrCode className="w-4 h-4 text-[#14B8A6]" />
-          </div>
-          <div>
-            <p className="text-[10px] text-[#6B7280] font-medium">Scan</p>
-            <p className="text-xs font-bold text-[#111827]">ZP-8471-B92</p>
-          </div>
-        </div>
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-        className="absolute -right-8 sm:-right-16 -bottom-2 z-20 glass rounded-2xl p-3 shadow-xl shadow-[#153E75]/10 hidden sm:block"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#EAFBF8] flex items-center justify-center">
-            <Heart className="w-4 h-4 text-[#14B8A6]" />
-          </div>
-          <div>
-            <p className="text-[10px] text-[#6B7280] font-medium">Health</p>
-            <p className="text-xs font-bold text-[#111827]">Excellent</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Phone frame */}
-      <div className="relative rounded-[3rem] bg-[#111827] p-3 shadow-2xl shadow-[#153E75]/30">
-        <div className="rounded-[2.4rem] overflow-hidden bg-gradient-to-b from-[#EAFBF8] via-white to-white">
-          {/* Notch */}
-          <div className="relative pt-3 pb-2 flex justify-center">
-            <div className="w-24 h-6 rounded-full bg-[#111827]" />
-          </div>
-          {/* Status bar */}
-          <div className="flex justify-between items-center px-6 pb-3 text-[10px] font-semibold text-[#111827]">
-            <span>9:41</span>
-            <span className="flex gap-1 items-center">
-              <span className="w-3 h-2 rounded-sm bg-[#111827]" />
-              <span className="w-3 h-2 rounded-sm bg-[#111827]" />
-              <span className="w-4 h-2 rounded bg-[#111827]" />
-            </span>
-          </div>
-          <div className="px-4 pb-6">
-            <p className="text-[11px] text-[#6B7280] font-medium">Welcome back</p>
-            <h3 className="text-lg font-bold text-[#111827]">Shiro's Card</h3>
-            {/* Photo card */}
-            <div className="mt-3 rounded-2xl overflow-hidden relative shadow-lg">
-              <img src={HERO_DOG} alt="Shiro" className="w-full h-40 object-cover object-top" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#153E75]/80 via-transparent to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <p className="text-[10px] font-medium opacity-80">ZePaw Identity</p>
-                <p className="text-sm font-bold tracking-wider">ZP-8471-B92</p>
-              </div>
-              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-1">
-                <BadgeCheck className="w-3 h-3 text-[#14B8A6]" />
-                <span className="text-[10px] font-bold text-[#153E75]">Verified</span>
-              </div>
-            </div>
-            {/* Vax status */}
-            <div className="mt-3 flex gap-2">
-              <div className="flex-1 bg-[#EAFBF8] rounded-xl p-2.5">
-                <div className="flex items-center gap-1.5">
-                  <Syringe className="w-3 h-3 text-[#14B8A6]" />
-                  <span className="text-[9px] font-semibold text-[#153E75]">VAX</span>
-                </div>
-                <p className="text-xs font-bold text-[#111827] mt-1">Up to date</p>
-              </div>
-              <div className="flex-1 bg-[#F8FAFC] rounded-xl p-2.5">
-                <div className="flex items-center gap-1.5">
-                  <Activity className="w-3 h-3 text-[#153E75]" />
-                  <span className="text-[9px] font-semibold text-[#153E75]">HEALTH</span>
-                </div>
-                <p className="text-xs font-bold text-[#111827] mt-1">Excellent</p>
-              </div>
-            </div>
-            {/* QR */}
-            <div className="mt-3 rounded-2xl bg-white border border-[#F8FAFC] p-3 flex items-center gap-3 shadow-sm">
-              <QRPattern size={64} />
-              <div>
-                <p className="text-[10px] text-[#6B7280] font-medium">Tap to share</p>
-                <p className="text-sm font-bold text-[#111827]">Verify Shiro</p>
-                <p className="text-[10px] text-[#14B8A6] font-semibold mt-0.5">zepaw.io/v/8471</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ---------- HERO ----------
+/* ==================================================================
+   HERO — owns the fold. Three depth layers: paper, photograph,
+   identity card. The card crosses over the photograph's edge.
+   ================================================================== */
 function Hero() {
+  const ref = useRef(null);
+  const still = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const certY = useTransform(scrollYProgress, [0, 1], [0, still ? 0 : -110]);
+  const photoY = useTransform(scrollYProgress, [0, 1], [0, still ? 0 : 55]);
+  const tilt = useTilt({ max: 7 });
+
   return (
     <section
+      ref={ref}
       id="home"
-      className="relative overflow-hidden pt-32 pb-20 mb-20 sm:pt-40 sm:pb-28 sm:mb-28"
+      // Centred, not bottom-anchored. The extra top padding is the height
+      // of the fixed nav (~84px) plus the bottom padding, so the block ends
+      // up optically balanced in the space *below the nav* rather than
+      // balanced in the raw viewport and reading as though it has sunk.
+      className="relative flex min-h-[100dvh] flex-col justify-center overflow-hidden pb-14 pt-[8.5rem] sm:pb-20 sm:pt-[10.25rem] [@media(max-height:800px)]:pb-12 [@media(max-height:800px)]:pt-[7.5rem]"
     >
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-mesh" />
+      {/* Midground: the photograph, feathered into the paper on every
+          edge it meets so there is no hard image seam. */}
       <motion.div
-        animate={{ scale: [1, 1.1, 1], rotate: [0, 30, 0] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#14B8A6]/10 blur-3xl"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], rotate: [0, -20, 0] }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#153E75]/10 blur-3xl"
-      />
-      <div className="relative container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 mb-6"
-            >
-              <span className="w-2 h-2 rounded-full bg-[#14B8A6] animate-pulse" />
-              <span className="text-xs font-semibold text-[#153E75]">Coming soon</span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.05 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-[#111827]"
-            >
-              The <span className="text-gradient">Smarter</span> Way to Care for Your Pet.
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="mt-6 text-lg text-[#6B7280] max-w-xl leading-relaxed"
-            >
-              ZePaw gives every pet a permanent digital identity where pet parents can securely
-              manage lifelong health records, vaccinations, documents, and important information.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25 }}
-              className="mt-8 flex flex-wrap gap-3"
-            >
-              <a
-                href="#beta"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white font-semibold bg-gradient-to-r from-[#153E75] to-[#14B8A6] shadow-xl shadow-[#14B8A6]/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all"
-              >
-                Join Beta
-                <ArrowRight className="w-4 h-4" />
-              </a>
-              <a
-                href="#features"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[#153E75] font-semibold bg-white border border-[#153E75]/10 hover:border-[#153E75]/30 hover:bg-[#F8FAFC] transition-all"
-              >
-                Learn More
-              </a>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="mt-10 flex items-center gap-6 text-[#6B7280] text-xs"
-            >
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#14B8A6]" />
-                <span>Encrypted</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#14B8A6]" />
-                <span>Owner-controlled</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Cloud className="w-4 h-4 text-[#14B8A6]" />
-                <span>Cloud secure</span>
-              </div>
-            </motion.div>
-          </div>
-          <div className="relative">
-            <PhoneMockup />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---------- Section wrapper ----------
-function Section({ id, eyebrow, title, subtitle, children, className = '' }) {
-  return (
-    <section id={id} className={`relative pb-20 sm:pb-28 ${className}`}>
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7 }}
-          className="max-w-3xl mx-auto text-center mb-14"
-        >
-          {eyebrow && (
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EAFBF8] text-[#14B8A6] mb-4">
-              {eyebrow}
-            </span>
-          )}
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#111827] leading-[1.1]">
-            {title}
-          </h2>
-          {subtitle && <p className="mt-5 text-lg text-[#6B7280] leading-relaxed">{subtitle}</p>}
-        </motion.div>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-// ---------- Identity Card (section 2) ----------
-function IdentityCard() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8 }}
-      className="max-w-md mx-auto"
-    >
-      <div className="relative rounded-[2rem] bg-gradient-to-br from-[#153E75] via-[#1E4F8A] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/25">
-        <div className="rounded-[calc(2rem-2px)] bg-white overflow-hidden">
-          {/* Header */}
-          <div className="relative p-6 bg-gradient-to-br from-[#153E75] to-[#1E4F8A] text-white">
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute -top-4 -right-4 w-32 h-32 rounded-full bg-[#14B8A6] blur-2xl" />
-            </div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-                  <PawPrint className="w-4 h-4" />
-                </div>
-                <span className="font-bold tracking-tight">ZePaw ID</span>
-              </div>
-              <BadgeCheck className="w-6 h-6" />
-            </div>
-            <div className="relative mt-6 flex items-center gap-4">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg">
-                <img src={CARD_DOG} alt="Shiro" className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <p className="text-xs opacity-70 font-medium">Pet Name</p>
-                <h3 className="text-2xl font-bold">Shiro</h3>
-                <p className="text-xs opacity-80 mt-0.5">Pug</p>
-              </div>
-            </div>
-            <div className="relative mt-5 pt-5 border-t border-white/15">
-              <p className="text-[10px] opacity-70 font-medium tracking-widest">ZEPAW IDENTITY</p>
-              <p className="font-bold text-xl tracking-[0.2em] mt-1">ZP-8471-B92</p>
-            </div>
-          </div>
-          {/* Body */}
-          <div className="p-6 grid grid-cols-2 gap-4">
-            <Info label="Species" value="Dog" />
-            <Info label="Breed" value="Pug" />
-            <Info label="Age" value="3 years" />
-            <Info
-              label="Vaccination"
-              value="Up to date"
-              accent
-              icon={<Check className="w-3 h-3" />}
-            />
-            <div className="col-span-2 mt-2 rounded-xl bg-[#F8FAFC] p-4 flex items-center gap-4">
-              <QRPattern size={72} />
-              <div className="flex-1">
-                <p className="text-[10px] text-[#6B7280] font-semibold tracking-widest">
-                  EMERGENCY CONTACT
-                </p>
-                <p className="text-sm font-bold text-[#111827] mt-1">+91 98••••2170</p>
-                <p className="text-[11px] text-[#6B7280] mt-0.5">Scan to verify identity</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <p className="text-center text-sm text-[#6B7280] mt-5">
-        This identity stays with your pet for their entire life.
-      </p>
-    </motion.div>
-  );
-}
-function Info({ label, value, accent, icon }) {
-  return (
-    <div>
-      <p className="text-[10px] text-[#6B7280] font-semibold tracking-widest">
-        {label.toUpperCase()}
-      </p>
-      <p
-        className={`text-sm font-bold mt-1 flex items-center gap-1.5 ${
-          accent ? 'text-[#14B8A6]' : 'text-[#111827]'
-        }`}
+        style={{ y: photoY }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-auto z-0 h-[46%] lg:bottom-auto lg:left-auto lg:right-0 lg:top-0 lg:h-[92%] lg:w-[50%]"
       >
-        {icon}
-        {value}
-      </p>
-    </div>
+        <img
+          src="/assets/pet-landscape.jpg"
+          alt=""
+          width={1600}
+          height={1066}
+          fetchPriority="high"
+          decoding="async"
+          className="hero-photo h-full w-full object-cover object-[62%_30%]"
+        />
+      </motion.div>
+
+      {/* Title, rule and caption are ONE group, not three things floating
+          at arbitrary heights. The rule is anchored a fixed distance under
+          the headline so it reads as structure rather than a stray hairline,
+          and it runs past the container to pass behind the identity card.
+          The group is then optically centred against the artifact. */}
+      <div className="relative z-10 mx-auto grid w-full max-w-[78rem] grid-cols-1 gap-y-10 px-5 sm:px-8 lg:grid-cols-12 lg:items-center lg:gap-y-0">
+        <div className="lg:col-span-6 lg:col-start-1">
+          {/* The break is forced so the emphasis always sits whole on its own
+              line. Left to wrap freely it strands the accent on a third line
+              and the italic reads as a stray word instead of a phrase. */}
+          <h1 className="font-display text-[clamp(2.45rem,7.8vw,6rem)] font-normal leading-[0.93] tracking-[-0.02em]">
+            A passport for <span className="block italic">every pet.</span>
+          </h1>
+
+          {/* Overshoots the column so it carries behind the identity card.
+              The hero clips it, so it can never cause a scrollbar. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none mt-8 hidden h-px w-[200vw] bg-ink/20 lg:block"
+          />
+
+          <p className="mt-8 max-w-[44ch] text-[1.05rem] leading-relaxed text-ink-soft">
+            ZePaw issues your pet one permanent record. Every vaccination, every
+            document, every visit, in one place that any vet, shelter or boarding
+            house can verify in seconds.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <a
+              href="#beta"
+              className="group inline-flex items-center gap-3 bg-ink px-6 py-3.5 text-stock transition-colors duration-300 hover:bg-seal-deep active:scale-[0.99]"
+              style={{ transitionTimingFunction: 'cubic-bezier(0.22,1,0.36,1)' }}
+            >
+              Request an identity
+              <svg width="13" height="13" viewBox="0 0 12 12" aria-hidden="true">
+                <path
+                  d="M2.5 9.5 9.5 2.5M4.2 2.5h5.3v5.3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform duration-500 ease-out group-hover:translate-x-[3px] group-hover:-translate-y-[3px]"
+                />
+              </svg>
+            </a>
+            <p className="text-[0.92rem] text-ink-soft">Free for beta guardians, for life.</p>
+          </div>
+        </div>
+
+        {/* The signature artifact, crossing both the rule and the photograph */}
+        <motion.div
+          style={{ y: certY }}
+          className="relative z-20 flex justify-center lg:col-span-6 lg:col-start-7 lg:justify-end"
+        >
+          {/* The resting angle lives on the outer wrapper: motion writes an
+              inline transform on the tilt layer, which would otherwise
+              override a Tailwind rotate class and stand the card up straight. */}
+          <div className="[perspective:1400px] lg:-mr-6 lg:rotate-[-2.5deg]">
+            <motion.div
+              ref={tilt.ref}
+              style={tilt.style}
+              {...tilt.handlers}
+              className="lifted will-change-transform"
+            >
+              <IdentityCard />
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
-// ---------- Verify Section ----------
-// function VerifySection() {
-//   const [id, setId] = useState('ZP-8471-B92');
-//   const [verified, setVerified] = useState(true);
-//   const [scanning, setScanning] = useState(false);
-
-//   const runVerify = () => {
-//     setScanning(true);
-//     setVerified(false);
-//     setTimeout(() => {
-//       setScanning(false);
-//       setVerified(true);
-//     }, 1200);
-//   };
-
-//   return (
-//     <Section
-//       id="verify"
-//       eyebrow="Verify Anywhere"
-//       title="Verify any ZePaw Identity."
-//       subtitle="Enter an ID or scan the QR code. Only owner-approved information is publicly visible — private medical records remain fully secure."
-//     >
-//       <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-//         {/* Input side */}
-//         <motion.div
-//           initial={{ opacity: 0, x: -30 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 0.6 }}
-//           className="rounded-3xl bg-white border border-[#F8FAFC] p-8 shadow-xl shadow-[#153E75]/5"
-//         >
-//           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAFBF8] text-[#14B8A6] text-xs font-semibold mb-5">
-//             <ScanLine className="w-3.5 h-3.5" /> Live Verification
-//           </div>
-//           <h3 className="text-2xl font-bold text-[#111827]">Enter a ZePaw Identity</h3>
-//           <p className="text-[#6B7280] text-sm mt-2">
-//             Try our sample: <code className="font-mono text-[#153E75]">ZP-8471-B92</code>
-//           </p>
-//           <div className="mt-5 flex gap-2">
-//             <Input
-//               value={id}
-//               onChange={(e) => setId(e.target.value)}
-//               placeholder="ZP-XXXX-XXX"
-//               className="h-12 rounded-xl border-[#E5E7EB] font-mono tracking-widest"
-//             />
-//             <Button
-//               onClick={runVerify}
-//               className="h-12 rounded-xl bg-gradient-to-r from-[#153E75] to-[#14B8A6] hover:opacity-90 text-white font-semibold px-6"
-//             >
-//               Verify
-//             </Button>
-//           </div>
-//           <div className="mt-6 flex items-center gap-3 text-xs text-[#6B7280]">
-//             <div className="flex-1 h-px bg-[#F8FAFC]" />
-//             <span>or</span>
-//             <div className="flex-1 h-px bg-[#F8FAFC]" />
-//           </div>
-//           <button
-//             onClick={runVerify}
-//             className="mt-6 w-full rounded-2xl border-2 border-dashed border-[#153E75]/20 hover:border-[#14B8A6] hover:bg-[#EAFBF8]/40 transition-all p-6 flex items-center gap-4 group"
-//           >
-//             <div className="w-14 h-14 rounded-xl bg-[#EAFBF8] flex items-center justify-center group-hover:scale-110 transition-transform">
-//               <QrCode className="w-6 h-6 text-[#14B8A6]" />
-//             </div>
-//             <div className="text-left flex-1">
-//               <p className="font-bold text-[#111827]">Scan a QR Code</p>
-//               <p className="text-xs text-[#6B7280]">Point your camera at any ZePaw tag</p>
-//             </div>
-//             <ArrowRight className="w-5 h-5 text-[#6B7280] group-hover:text-[#14B8A6] group-hover:translate-x-1 transition-all" />
-//           </button>
-//         </motion.div>
-
-//         {/* Result side */}
-//         <motion.div
-//           initial={{ opacity: 0, x: 30 }}
-//           whileInView={{ opacity: 1, x: 0 }}
-//           viewport={{ once: true }}
-//           transition={{ duration: 0.6 }}
-//           className="relative rounded-3xl bg-gradient-to-br from-[#153E75] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/20"
-//         >
-//           <div className="rounded-[calc(1.5rem-2px)] bg-white p-6 h-full">
-//             <AnimatePresence mode="wait">
-//               {scanning ? (
-//                 <motion.div
-//                   key="scanning"
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   exit={{ opacity: 0 }}
-//                   className="flex flex-col items-center justify-center h-full py-16"
-//                 >
-//                   <Loader2 className="w-10 h-10 text-[#14B8A6] animate-spin" />
-//                   <p className="mt-4 text-sm font-semibold text-[#153E75]">Verifying identity…</p>
-//                 </motion.div>
-//               ) : verified ? (
-//                 <motion.div
-//                   key="verified"
-//                   initial={{ opacity: 0, y: 10 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                   exit={{ opacity: 0 }}
-//                 >
-//                   <div className="flex items-center justify-between">
-//                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EAFBF8] text-[#14B8A6]">
-//                       <BadgeCheck className="w-4 h-4" />
-//                       <span className="text-xs font-bold">Verified</span>
-//                     </div>
-//                     <span className="text-xs text-[#6B7280] font-mono">{id}</span>
-//                   </div>
-//                   <div className="mt-5 flex items-center gap-4">
-//                     <div className="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-[#EAFBF8]">
-//                       <img
-//                         src={VERIFY_DOG}
-//                         alt="Verified pet"
-//                         className="w-full h-full object-cover"
-//                       />
-//                     </div>
-//                     <div>
-//                       <h3 className="text-2xl font-bold text-[#111827]">Shiro</h3>
-//                       <p className="text-sm text-[#6B7280]">Golden Retriever • 3 yrs</p>
-//                       <p className="text-xs text-[#14B8A6] font-semibold mt-1">Male • Neutered</p>
-//                     </div>
-//                   </div>
-//                   <div className="mt-6 space-y-3">
-//                     <Row
-//                       icon={<Syringe className="w-4 h-4" />}
-//                       label="Vaccination Status"
-//                       value="Up to date"
-//                       good
-//                     />
-//                     <Row
-//                       icon={<Phone className="w-4 h-4" />}
-//                       label="Emergency Contact"
-//                       value="+91 98••••2170"
-//                       badge="Shared by owner"
-//                     />
-//                     <Row
-//                       icon={<Lock className="w-4 h-4" />}
-//                       label="Medical Records"
-//                       value="Private"
-//                       muted
-//                     />
-//                   </div>
-//                   <div className="mt-5 p-3 rounded-xl bg-[#F8FAFC] flex items-start gap-2">
-//                     <ShieldCheck className="w-4 h-4 text-[#14B8A6] mt-0.5 shrink-0" />
-//                     <p className="text-xs text-[#6B7280] leading-relaxed">
-//                       Only information shared by the owner is publicly visible. Sensitive medical
-//                       records remain encrypted and private.
-//                     </p>
-//                   </div>
-//                 </motion.div>
-//               ) : null}
-//             </AnimatePresence>
-//           </div>
-//         </motion.div>
-//       </div>
-//     </Section>
-//   );
-// }
-
-// function Row({ icon, label, value, good, muted, badge }) {
-//   return (
-//     <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC]">
-//       <div className="flex items-center gap-3">
-//         <div
-//           className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-//             good
-//               ? 'bg-[#EAFBF8] text-[#14B8A6]'
-//               : muted
-//                 ? 'bg-white text-[#6B7280]'
-//                 : 'bg-white text-[#153E75]'
-//           }`}
-//         >
-//           {icon}
-//         </div>
-//         <div>
-//           <p className="text-[11px] text-[#6B7280] font-medium">{label}</p>
-//           <p className={`text-sm font-bold ${muted ? 'text-[#6B7280]' : 'text-[#111827]'}`}>
-//             {value}
-//           </p>
-//         </div>
-//       </div>
-//       {badge && (
-//         <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-white text-[#14B8A6]">
-//           {badge}
-//         </span>
-//       )}
-//     </div>
-//   );
-// }
-
-// ---------- Vault (section 4) ----------
-const VAULT_ITEMS = [
-  { icon: FileText, title: 'Prescriptions', desc: 'All vet prescriptions in one place.' },
-  { icon: Syringe, title: 'Vaccination Cards', desc: 'Complete immunisation history.' },
-  { icon: FlaskConical, title: 'Lab Reports', desc: 'Blood work, urinalysis and more.' },
-  { icon: Receipt, title: 'Medical Bills', desc: 'Track expenses effortlessly.' },
-  { icon: Shield, title: 'Insurance Documents', desc: 'Policies, claims and coverage.' },
-  { icon: Award, title: 'Adoption Certificates', desc: 'Ownership and pedigree docs.' },
+/* ==================================================================
+   THE RECORD — opens on a statement, not a kicker
+   ================================================================== */
+const ANATOMY = [
+  ['01', 'Issued once', 'A number that is created with the pet and never reassigned.'],
+  ['02', 'Kept current', 'Vaccinations, prescriptions and lab work land on the same record.'],
+  ['03', 'Read anywhere', 'A vet scans the tag and sees exactly what you have published.'],
+  ['04', 'Owned by you', 'Sharing is granted per person, per purpose, and revoked whenever.'],
 ];
-function Vault() {
+
+function Record() {
   return (
-    <Section
-      id="features"
-      eyebrow="Digital Health Vault"
-      title="Every document. Securely stored. Instantly available."
-      subtitle="ZePaw keeps every important document about your pet organised, encrypted and always within reach."
+    <section id="record" className="relative border-t border-ink/12 py-24 sm:py-32">
+      <SceneNum n="01" />
+      <div className="relative mx-auto max-w-[78rem] px-5 sm:px-8">
+        <Rise>
+          <h2 className="max-w-[13ch] font-display text-[clamp(2.6rem,6.4vw,5rem)] leading-[0.98] tracking-[-0.02em]">
+            Paper is lost. A record <span className="italic">holds.</span>
+          </h2>
+        </Rise>
+        <Rise delay={0.06}>
+          <p className="mt-7 max-w-[52ch] text-ink-soft">
+            Most pets have their life scattered across a folder of receipts, a WhatsApp
+            thread and a clinic&apos;s filing cabinet. ZePaw replaces all of it with one
+            record that outlives every one of them.
+          </p>
+        </Rise>
+
+        <div className="mt-16 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          {ANATOMY.map(([n, title, body], i) => (
+            <Rise key={n} delay={i * 0.05}>
+              <div className="border-t-2 border-ink pt-4">
+                <span className="data text-[10px] tracking-[0.18em] text-seal-deep">{n}</span>
+                <h3 className="mt-3 font-display text-[1.45rem] leading-tight">{title}</h3>
+                <p className="mt-2 text-[0.92rem] leading-relaxed text-ink-soft">{body}</p>
+              </div>
+            </Rise>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   THE REGISTER — the emotional core, and the page's one structural
+   move. The record stays pinned while a life scrolls past it, and the
+   document reacts: the entry count climbs, the latest entry changes,
+   the seal re-strikes, and Shiro visibly ages from day one to two.
+   Entries run oldest to newest so scrolling down is time moving
+   forward and the record filling up.
+
+   Nothing here is hidden behind the animation. Every entry is in the
+   DOM and fully legible; scroll position only drives which one the
+   pinned document is currently reporting.
+   ================================================================== */
+const ENTRIES = [
+  {
+    date: '04 Jan 2022',
+    mark: 'document',
+    title: 'Birth record',
+    detail: 'Litter of four, fawn male',
+    by: 'Registered at issue',
+    age: 'Day one',
+  },
+  {
+    date: '08 Mar 2022',
+    mark: 'vaccination',
+    title: 'DHPP, first dose',
+    detail: 'Puppy series begun',
+    by: 'Whitefield Vet Clinic',
+    age: '9 weeks old',
+  },
+  {
+    date: '21 Mar 2023',
+    mark: 'vaccination',
+    title: 'DHPP booster',
+    detail: 'Series complete',
+    by: 'Whitefield Vet Clinic',
+    age: '1 year, 2 months',
+  },
+  {
+    date: '18 Oct 2023',
+    mark: 'lab',
+    title: 'Blood panel',
+    detail: 'All values in range',
+    by: 'Cessna Diagnostics',
+    age: '1 year, 9 months',
+  },
+  {
+    date: '02 Feb 2024',
+    mark: 'checkup',
+    title: 'Annual examination',
+    detail: 'Weight 8.2kg, healthy',
+    by: 'Dr. A. Menon',
+    age: '2 years, 1 month',
+  },
+  {
+    date: '12 Mar 2024',
+    mark: 'vaccination',
+    title: 'Rabies booster',
+    detail: 'Nobivac, next due Mar 2025',
+    by: 'Whitefield Vet Clinic',
+    age: '2 years, 2 months',
+    due: 'Booster due',
+  },
+];
+
+/* The pinned document. Re-strikes its seal whenever the entry changes. */
+function RecordCard({ index }) {
+  const entry = ENTRIES[index];
+  const still = useReducedMotion();
+  return (
+    <article className="notch-tr relative bg-stock px-6 py-6 lifted sm:px-7">
+      <div className="pointer-events-none absolute inset-[7px] border border-ink/25" />
+      <div className="pointer-events-none absolute inset-[10px] border border-ink/10" />
+
+      <div className="relative">
+        <header className="clears-notch flex items-baseline justify-between border-b border-ink/20 pb-3">
+          <p className="data text-[9.5px] uppercase tracking-[0.22em] text-ink/75">ZePaw</p>
+          <p className="data text-[9.5px] text-ink-soft">Live record</p>
+        </header>
+
+        <div className="mt-4 flex items-center gap-4">
+          <img
+            src="/assets/pet-portrait.jpg"
+            alt="Shiro, a fawn pug"
+            width={880}
+            height={1100}
+            loading="lazy"
+            decoding="async"
+            className="h-[3.6rem] w-[2.9rem] shrink-0 border border-ink/30 object-cover"
+          />
+          <div className="min-w-0">
+            <h3 className="font-display text-[1.6rem] leading-none">Shiro</h3>
+            <p className="data mt-1.5 text-[0.82rem] tracking-[0.08em] text-ink-soft">ZP-8471-B92</p>
+          </div>
+        </div>
+
+        {/* The readout that makes the record feel alive */}
+        <dl className="mt-5 border-t border-ink/15 pt-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <dt className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft">Entries</dt>
+            <dd className="data text-[1.5rem] leading-none tabular-nums">
+              {String(index + 1).padStart(2, '0')}
+              <span className="text-ink-soft"> / {String(ENTRIES.length).padStart(2, '0')}</span>
+            </dd>
+          </div>
+
+          <div className="mt-4">
+            <dt className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft">Latest entry</dt>
+            <dd className="mt-1.5 flex items-start gap-2.5">
+              <Mark name={entry.mark} size={18} className="mt-[3px] shrink-0 text-seal" />
+              <span className="min-w-0">
+                <span className="block font-display text-[1.15rem] leading-tight">
+                  {entry.title}
+                </span>
+                <span className="data mt-1 block text-[0.72rem] text-ink-soft">{entry.date}</span>
+              </span>
+            </dd>
+          </div>
+
+          <div className="mt-4 border-t border-ink/15 pt-3">
+            <dt className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft">
+              Shiro at this entry
+            </dt>
+            <dd className="mt-1 font-display text-[1.1rem] italic text-ink/85">{entry.age}</dd>
+          </div>
+        </dl>
+
+        {/* Seal re-strikes on change. It is always rendered at full size
+            and opacity; only a decorative impression ring animates, so a
+            dead motion engine costs nothing but the flourish. */}
+        <div className="relative mt-5 flex justify-end">
+          <div className="relative">
+            <motion.div
+              key={still ? 'static' : index}
+              animate={still ? undefined : { scale: [1, 0.92, 1] }}
+              transition={{ duration: 0.5, ease: EASE }}
+            >
+              <Seal size={72} className="text-seal" id="ledger-seal" />
+            </motion.div>
+            {!still && (
+              <motion.span
+                key={`ring-${index}`}
+                aria-hidden="true"
+                initial={{ scale: 0.7, opacity: 0.5 }}
+                animate={{ scale: 1.5, opacity: 0 }}
+                transition={{ duration: 0.75, ease: 'easeOut' }}
+                className="pointer-events-none absolute inset-0 rounded-full border border-seal"
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Ledger() {
+  const [active, setActive] = useState(0);
+  const still = useReducedMotion();
+  const sectionRef = useRef(null);
+  const containerRef = useRef(null);
+  const trackRef = useRef(null);
+  const [travel, setTravel] = useState(0);
+  const n = ENTRIES.length;
+
+  /* Vertical scroll drives horizontal time. The section is a tall scroll
+     runway; its viewport-high inner screen pins while progress pushes the
+     entries left, so two years pass sideways in front of the record.
+     Reduced motion opts out of the pin entirely and leaves a plain,
+     natively swipeable horizontal strip. */
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
+  const x = useTransform(scrollYProgress, [0.06, 0.94], [0, -travel]);
+  const fill = useTransform(scrollYProgress, [0.06, 0.94], [0, 1]);
+
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    const t = Math.min(Math.max((p - 0.06) / 0.88, 0), 1);
+    setActive(Math.min(n - 1, Math.round(t * (n - 1))));
+  });
+
+  useEffect(() => {
+    if (still) return undefined;
+    const measure = () => {
+      if (trackRef.current && containerRef.current) {
+        setTravel(
+          Math.max(0, trackRef.current.scrollWidth - containerRef.current.clientWidth)
+        );
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [still]);
+
+  return (
+    <section
+      ref={sectionRef}
+      id="ledger"
+      className={`relative border-y border-ink/12 bg-stone ${
+        still ? 'py-24 sm:py-32' : 'h-[340vh]'
+      }`}
     >
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
-        {VAULT_ITEMS.map((v, i) => (
-          <motion.div
-            key={v.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.05 }}
-            className="flex flex-col items-center group relative rounded-2xl bg-white p-6 border border-[#F8FAFC] hover:border-[#14B8A6]/30 hover:shadow-xl hover:shadow-[#14B8A6]/5 hover:-translate-y-1 transition-all"
+      <SceneNum n="03" />
+      <div
+        className={
+          still
+            ? 'relative'
+            : 'sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden'
+        }
+      >
+        <div className="mx-auto w-full max-w-[78rem] px-5 sm:px-8">
+          <div className="relative flex flex-wrap items-end justify-between gap-x-8 gap-y-3 border-b-2 border-ink/20 pb-4">
+            <h2 className="font-display text-[clamp(1.9rem,4.2vw,3rem)] leading-none tracking-[-0.015em]">
+              One record, a whole life.
+            </h2>
+            <p className="max-w-[34ch] text-[0.9rem] text-ink-soft [@media(max-height:780px)]:hidden">
+              Two years of Shiro. Keep scrolling, time moves sideways.
+            </p>
+            {/* The masthead rule doubles as the timeline's progress: it fills
+                as the years pass. Square caps, so the fill never morphs. */}
+            {!still && (
+              <motion.span
+                aria-hidden="true"
+                style={{ scaleX: fill }}
+                className="absolute -bottom-[2px] left-0 h-[2px] w-full origin-left bg-seal-deep"
+              />
+            )}
+          </div>
+
+          {/* Mobile: the record continues as a slim live readout.
+              aria-hidden: it restates the entries beside it. */}
+          <div
+            aria-hidden="true"
+            className="mt-5 flex items-center gap-3 border-b border-ink/15 pb-3 lg:hidden"
           >
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAFBF8] to-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-              <v.icon className="w-6 h-6 text-[#14B8A6]" />
+            <span className="data shrink-0 text-[0.95rem] tabular-nums">
+              {String(active + 1).padStart(2, '0')}
+              <span className="text-ink-soft"> / 0{n}</span>
+            </span>
+            <span className="h-4 w-px shrink-0 bg-ink/20" />
+            <span className="min-w-0 flex-1 truncate font-display text-[1rem]">
+              {ENTRIES[active].title}
+            </span>
+            <span className="data shrink-0 text-[0.7rem] text-ink-soft">
+              {ENTRIES[active].age}
+            </span>
+          </div>
+
+          <div className="mt-6 grid items-center gap-8 sm:mt-10 lg:grid-cols-12 lg:gap-12 [@media(max-height:820px)]:mt-5">
+            <div className="hidden lg:col-span-4 lg:block">
+              <RecordCard index={still ? n - 1 : active} />
             </div>
-            <h3 className="mt-4 font-bold text-[#111827] text-lg">{v.title}</h3>
-            <p className="text-sm text-[#6B7280] mt-1">{v.desc}</p>
-          </motion.div>
-        ))}
-      </div>
-      <div className="mt-10 flex items-center justify-center gap-2 text-sm text-[#6B7280]">
-        <Cloud className="w-4 h-4 text-[#14B8A6]" />
-        Encrypted and backed up to the cloud, forever.
-      </div>
-    </Section>
-  );
-}
 
-// ---------- Timeline ----------
-const TIMELINE = [
-  { icon: Syringe, title: 'Puppy Vaccinations', date: 'March 2022', desc: 'DHPP, Rabies' },
-  { icon: Activity, title: 'First Blood Test', date: 'Aug 2022', desc: 'All values normal' },
-  { icon: Stethoscope, title: 'Annual Vet Visit', date: 'Feb 2023', desc: 'Healthy checkup' },
-  { icon: FlaskConical, title: 'Deworming Cycle', date: 'May 2023', desc: 'Broad spectrum' },
-  { icon: Heart, title: 'Neutering Surgery', date: 'Oct 2023', desc: 'Recovery complete' },
-  { icon: Activity, title: 'Health Report', date: 'Mar 2024', desc: 'Excellent condition' },
-];
-function Timeline() {
-  return (
-    <Section
-      eyebrow="Lifetime Health Timeline"
-      title="Every record. Seamlessly documented."
-      subtitle="Follow your pet's health story from the very first visit to every checkup that follows."
-    >
-      <div className="relative max-w-3xl mx-auto">
-        <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-[#14B8A6]/0 via-[#14B8A6]/40 to-[#14B8A6]/0" />
-        {TIMELINE.map((t, i) => (
-          <motion.div
-            key={t.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.08 }}
-            className={`relative flex sm:items-center mb-8 sm:mb-6 ${
-              i % 2 === 0 ? 'sm:justify-start' : 'sm:justify-end'
-            }`}
-          >
             <div
-              className={`sm:w-[45%] pl-16 sm:pl-0 ${
-                i % 2 === 0 ? 'sm:pr-8 sm:text-right' : 'sm:pl-8'
+              ref={containerRef}
+              className={`lg:col-span-8 ${
+                still ? 'no-scrollbar overflow-x-auto' : 'overflow-hidden'
               }`}
             >
-              <div className="rounded-2xl bg-white border border-[#F8FAFC] p-5 shadow-sm hover:shadow-lg hover:border-[#14B8A6]/30 transition-all">
-                <p className="text-xs font-semibold text-[#14B8A6]">{t.date}</p>
-                <h4 className="font-bold text-[#111827] mt-1">{t.title}</h4>
-                <p className="text-sm text-[#6B7280] mt-1">{t.desc}</p>
-              </div>
-            </div>
-            <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white border-2 border-[#14B8A6] flex items-center justify-center shadow-lg z-10">
-              <t.icon className="w-5 h-5 text-[#14B8A6]" />
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-// ---------- Reminders ----------
-const REMINDERS = [
-  { icon: Syringe, title: 'Vaccinations', color: 'from-[#14B8A6] to-[#0F9488]' },
-  { icon: FlaskConical, title: 'Deworming', color: 'from-[#153E75] to-[#1E4F8A]' },
-  { icon: Shield, title: 'Flea & Tick', color: 'from-[#14B8A6] to-[#153E75]' },
-  { icon: Scissors, title: 'Grooming', color: 'from-[#153E75] to-[#14B8A6]' },
-  { icon: Stethoscope, title: 'Annual Checkup', color: 'from-[#14B8A6] to-[#0D9488]' },
-  { icon: Cake, title: 'Birthday', color: 'from-[#F472B6] to-[#14B8A6]' },
-];
-function Reminders() {
-  return (
-    <Section
-      eyebrow="Smart Care Reminders"
-      title="Never miss what matters most."
-      subtitle="Timely, gentle reminders for every part of your pet's care routine."
-    >
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-        {REMINDERS.map((r, i) => (
-          <motion.div
-            key={r.title}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.05 }}
-            className="group relative rounded-2xl overflow-hidden bg-white border border-[#F8FAFC] p-5 hover:shadow-xl transition-all flex flex-col items-center"
-          >
-            <div
-              className={`w-12 h-12 rounded-xl bg-gradient-to-br ${r.color} flex items-center justify-center shadow-md`}
-            >
-              <r.icon className="w-6 h-6 text-white" />
-            </div>
-            <h4 className="mt-4 font-bold text-[#111827]">{r.title}</h4>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-[#6B7280]">
-              <Bell className="w-3 h-3" />
-              <span>Auto reminders</span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-// ---------- Pet Parents ----------
-const PETS = [
-  { icon: Dog, label: 'Dogs' },
-  { icon: Cat, label: 'Cats' },
-  { icon: Bird, label: 'Birds' },
-  { icon: Rabbit, label: 'Rabbits' },
-  { icon: PawPrint, label: 'Hamsters' },
-  { icon: Turtle, label: 'Turtles' },
-  { icon: Sparkles, label: 'Exotic Pets' },
-];
-function PetParents() {
-  return (
-    <Section
-      eyebrow="For Every Family"
-      title="Built for every pet parent."
-      subtitle="Whatever kind of companion shares your home, ZePaw is for them."
-    >
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
-        {PETS.map((p, i) => (
-          <motion.div
-            key={p.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
-            className="rounded-2xl bg-white border border-[#F8FAFC] p-5 flex flex-col items-center hover:border-[#14B8A6]/40 hover:bg-[#EAFBF8]/30 hover:-translate-y-1 transition-all"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EAFBF8] to-white flex items-center justify-center">
-              <p.icon className="w-7 h-7 text-[#14B8A6]" />
-            </div>
-            <span className="mt-3 font-semibold text-sm text-[#111827]">{p.label}</span>
-          </motion.div>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-// ---------- Comparison ----------
-function Comparison() {
-  const without = [
-    'Lost Medical Records',
-    'Paper Documents',
-    'Forgotten Vaccinations',
-    'Difficult Record Sharing',
-  ];
-  const withZ = [
-    'Permanent Digital Identity',
-    'Secure Cloud Storage',
-    'QR Verification',
-    'Smart Reminders',
-    'Organized Health Timeline',
-  ];
-  return (
-    <Section
-      eyebrow="Why ZePaw"
-      title="A better way to care for your pet."
-      subtitle="See the difference an identity can make."
-    >
-      <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
-        <div className="rounded-3xl bg-[#F8FAFC] border border-[#F8FAFC] p-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-              <X className="w-5 h-5 text-red-500" />
-            </div>
-            <h3 className="text-lg font-bold text-black">Without ZePaw</h3>
-          </div>
-          <ul className="mt-6 space-y-3">
-            {without.map((w) => (
-              <li key={w} className="flex items-center gap-3 text-[#6B7280]">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-300" />
-                <span className="line-through decoration-red-600">{w}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-3xl bg-gradient-to-br from-[#153E75] to-[#14B8A6] p-8 text-white shadow-xl shadow-[#14B8A6]/20">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-              <Check className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-bold">With ZePaw</h3>
-          </div>
-          <ul className="mt-6 space-y-3">
-            {withZ.map((w) => (
-              <li key={w} className="flex items-center gap-3">
-                <BadgeCheck className="w-4 h-4 shrink-0" />
-                <span className="font-medium">{w}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ---------- Roadmap ----------
-function Roadmap() {
-  const launch = [
-    { icon: BadgeCheck, label: 'ZePaw Identity' },
-    { icon: User, label: 'Pet Profiles' },
-    { icon: Cloud, label: 'Digital Health Vault' },
-    { icon: Activity, label: 'Health Timeline' },
-    { icon: Bell, label: 'Smart Reminders' },
-    { icon: QrCode, label: 'QR Verification' },
-  ];
-  const soon = [
-    { icon: Building2, label: 'Veterinary Clinics' },
-    { icon: Landmark, label: 'Insurance Integration' },
-    { icon: Microscope, label: 'Diagnostic Labs' },
-    { icon: Store, label: 'Marketplace' },
-    { icon: Siren, label: 'Emergency Sharing' },
-    { icon: Brain, label: 'AI Health Insights' },
-  ];
-  return (
-    <Section
-      id="roadmap"
-      eyebrow="Product Roadmap"
-      title="What's here today. What's next."
-      subtitle="We're building ZePaw with pet parents, vets, and animal lovers."
-    >
-      <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        <div className="rounded-3xl bg-white border border-[#F8FAFC] p-8 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-[#111827]">Available at Launch</h3>
-            <span className="text-xs font-bold px-2 py-1 rounded-full bg-[#EAFBF8] text-[#14B8A6]">
-              LIVE SOON
-            </span>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {launch.map((l) => (
-              <div key={l.label} className="flex items-center gap-3 p-3 rounded-xl bg-[#F8FAFC]">
-                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-                  <l.icon className="w-4 h-4 text-[#14B8A6]" />
-                </div>
-                <span className="text-sm font-semibold text-[#111827]">{l.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-3xl bg-gradient-to-br from-[#153E75] to-[#1E4F8A] p-8 text-white shadow-xl">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold">Coming Soon</h3>
-            <span className="text-xs font-bold px-2 py-1 rounded-full bg-white/20 backdrop-blur">
-              PLANNED
-            </span>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {soon.map((l) => (
-              <div
-                key={l.label}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/10 backdrop-blur"
+              <motion.ol
+                ref={trackRef}
+                style={still ? undefined : { x }}
+                className="flex w-max items-stretch gap-6 py-2"
               >
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                  <l.icon className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-semibold">{l.label}</span>
+                {ENTRIES.map((e, i) => (
+                  <li
+                    key={e.date}
+                    className="notch-tr edge relative flex w-[min(24rem,78vw)] shrink-0 flex-col bg-stock px-6 py-6"
+                  >
+                    <div className="clears-notch flex items-baseline justify-between gap-4 border-b border-ink/15 pb-3">
+                      <time
+                        dateTime={new Date(e.date).toISOString().slice(0, 10)}
+                        className="data text-[0.78rem] text-ink-soft"
+                      >
+                        {e.date}
+                      </time>
+                      <span className="data text-[0.7rem] text-ink-soft">
+                        {String(i + 1).padStart(2, '0')} / 0{n}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex items-start gap-4">
+                      <Mark name={e.mark} size={24} className="mt-1 shrink-0 text-seal" />
+                      <div className="min-w-0">
+                        <h3 className="font-display text-[1.5rem] leading-tight sm:text-[1.65rem]">
+                          {e.title}
+                        </h3>
+                        <p className="mt-1.5 text-[0.95rem] text-ink-soft">{e.detail}</p>
+                        <p className="mt-1 text-[0.88rem] text-ink-soft">{e.by}</p>
+                      </div>
+                    </div>
+                    <div className="mt-auto flex items-end justify-between pt-4">
+                      <span className="data text-[0.72rem] uppercase tracking-[0.14em] text-ink-soft">
+                        {e.age}
+                      </span>
+                      {e.due && (
+                        <span className="data inline-flex items-center gap-2 text-[0.72rem] uppercase tracking-[0.14em] text-amber-deep">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+                          {e.due}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </motion.ol>
+            </div>
+          </div>
+
+          <p className="mt-6 max-w-[52ch] text-[0.95rem] text-ink-soft sm:mt-8 [@media(max-height:780px)]:hidden">
+            Entries are appended, never overwritten. When Shiro changes vets, moves
+            city or outlives a clinic&apos;s filing system, the record does not.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   VERIFY — a control that genuinely works
+   ================================================================== */
+const DEMO_ID = 'ZP8471B92';
+const PUBLIC_RECORD = [
+  ['Name', 'Shiro'],
+  ['Species', 'Dog · Pug'],
+  ['Rabies', 'Current, expires 12 Mar 2025', true],
+  ['Status', 'Active · not reported missing'],
+];
+
+function Verify() {
+  const [value, setValue] = useState('');
+  const [state, setState] = useState('idle'); // idle | checking | found | missing
+  const inputId = useId();
+  const still = useReducedMotion();
+
+  const check = (e) => {
+    e.preventDefault();
+    const normalised = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!normalised) {
+      setState('idle');
+      return;
+    }
+    setState('checking');
+    setTimeout(() => setState(normalised === DEMO_ID ? 'found' : 'missing'), 620);
+  };
+
+  return (
+    <section id="verify" className="relative border-y border-ink/12 bg-stone py-24 sm:py-32">
+      <SceneNum n="04" />
+      <div className="relative mx-auto grid max-w-[78rem] gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
+        <div>
+          <Rise>
+            {/* Opens on a question — a different shape from every other section */}
+            <h2 className="max-w-[16ch] font-display text-[clamp(2rem,4.6vw,3.4rem)] leading-[1.02] tracking-[-0.015em]">
+              Whose dog is this?
+            </h2>
+          </Rise>
+          <Rise delay={0.06}>
+            <p className="mt-6 max-w-[44ch] text-ink-soft">
+              Anyone who finds a pet wearing a ZePaw tag can answer that in one scan,
+              without ever seeing a medical file. Try the sample identity below.
+            </p>
+          </Rise>
+
+          <Rise delay={0.1}>
+            <form onSubmit={check} className="mt-9">
+              <label
+                htmlFor={inputId}
+                className="data block text-[10px] uppercase tracking-[0.2em] text-ink-soft"
+              >
+                Identity number
+              </label>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <input
+                  id={inputId}
+                  value={value}
+                  onChange={(e) => {
+                    setValue(e.target.value);
+                    if (state !== 'idle') setState('idle');
+                  }}
+                  placeholder="ZP-8471-B92"
+                  autoComplete="off"
+                  spellCheck="false"
+                  aria-describedby={`${inputId}-status`}
+                  className="data h-12 min-w-0 flex-1 border border-ink/25 bg-stock px-4 text-[0.95rem] tracking-[0.1em] placeholder:text-ink-soft focus:border-seal focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="h-12 shrink-0 bg-ink px-7 text-stock transition-colors duration-300 hover:bg-seal-deep disabled:opacity-60"
+                  disabled={state === 'checking'}
+                >
+                  {state === 'checking' ? 'Checking…' : 'Verify'}
+                </button>
               </div>
-            ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('ZP-8471-B92');
+                  setState('idle');
+                }}
+                className="mt-3 text-[0.9rem] text-seal-deep underline decoration-seal-deep/40 underline-offset-4 transition-colors duration-300 hover:decoration-seal-deep"
+              >
+                Use the sample identity
+              </button>
+            </form>
+          </Rise>
+        </div>
+
+        {/* Result — reserves its own height so nothing below it jumps */}
+        <div className="lg:pt-6">
+          <div
+            id={`${inputId}-status`}
+            aria-live="polite"
+            className="notch-br relative min-h-[19rem] border border-ink/20 bg-stock px-6 py-7 sm:px-8"
+          >
+            <AnimatePresence mode="wait">
+              {state === 'found' ? (
+                <motion.div
+                  key="found"
+                  initial={still ? false : { y: 10 }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      {/* A stranger scanning the tag sees the pet, not a form */}
+                      <img
+                        src="/assets/pet-portrait.jpg"
+                        alt="Shiro, a fawn pug"
+                        width={880}
+                        height={1100}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-[4.4rem] w-[3.5rem] border border-ink/25 object-cover"
+                      />
+                      <div>
+                        <p className="data text-[9px] uppercase tracking-[0.2em] text-seal-deep">
+                          Identity verified
+                        </p>
+                        <p className="data mt-2 text-[1.05rem] tracking-[0.1em]">ZP-8471-B92</p>
+                      </div>
+                    </div>
+                    <Seal size={62} className="shrink-0 text-seal" id="verify-seal" />
+                  </div>
+                  <dl className="mt-5 border-t border-ink/15">
+                    {PUBLIC_RECORD.map(([k, v, flagged]) => (
+                      <div
+                        key={k}
+                        className="flex items-baseline justify-between gap-4 border-b border-ink/10 py-2.5"
+                      >
+                        <dt className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft">
+                          {k}
+                        </dt>
+                        <dd className="flex items-center gap-2 text-right text-[0.9rem]">
+                          {flagged && (
+                            <span
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber"
+                              aria-hidden="true"
+                            />
+                          )}
+                          {v}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-4 text-[0.82rem] leading-relaxed text-ink-soft">
+                    Medical history, documents and contact details stay private unless the
+                    guardian grants access.
+                  </p>
+                </motion.div>
+              ) : state === 'missing' ? (
+                <motion.div
+                  key="missing"
+                  initial={still ? false : { y: 10 }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                >
+                  <p className="data text-[9px] uppercase tracking-[0.2em] text-ink-soft">
+                    No match on file
+                  </p>
+                  <p className="mt-4 max-w-[32ch] font-display text-[1.5rem] leading-tight">
+                    That identity is not in the register.
+                  </p>
+                  <p className="mt-3 text-[0.9rem] leading-relaxed text-ink-soft">
+                    Check the number on the tag, or try the sample identity{' '}
+                    <span className="data">ZP-8471-B92</span>.
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="idle"
+                  initial={still ? false : { y: 8 }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                  className="flex h-full min-h-[15rem] flex-col justify-center"
+                >
+                  <Seal
+                    size={78}
+                    className={`text-ink/20 ${state === 'checking' ? 'animate-pulse' : ''}`}
+                    id="idle-seal"
+                  />
+                  <p className="mt-5 max-w-[30ch] text-[0.95rem] leading-relaxed text-ink-soft">
+                    {state === 'checking'
+                      ? 'Checking the register…'
+                      : 'Enter an identity number to see what a stranger would see.'}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
-// ---------- Privacy ----------
-function Privacy() {
-  const items = [
-    { icon: User, title: 'Owner-first', text: 'Pet data belongs to the owner. Always.' },
-    {
-      icon: Lock,
-      title: 'End-to-end encryption',
-      text: 'All information is encrypted at rest and in transit.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Owner-controlled sharing',
-      text: 'You choose what to share, with whom, and for how long.',
-    },
-    {
-      icon: Shield,
-      title: 'Private medical records',
-      text: 'Sensitive records are never publicly visible.',
-    },
-    {
-      icon: BadgeCheck,
-      title: 'Public verification',
-      text: 'Only what you approve appears on public verification.',
-    },
-  ];
+/* ==================================================================
+   ISSUE — what ZePaw offers now, and next
+   ================================================================== */
+const NOW = [
+  'Permanent ZePaw Identity',
+  'Digital health vault',
+  'Vaccination register',
+  'QR verification tag',
+  'Care reminders',
+  'Owner-controlled sharing',
+];
+const NEXT = [
+  'Direct clinic filing',
+  'Insurance claim export',
+  'Diagnostic lab intake',
+  'Lost-pet broadcast',
+  'Multi-guardian access',
+  'Breed health insights',
+];
+
+function Issue() {
   return (
-    <Section
-      eyebrow="Privacy & Security"
-      title="Built on trust. Secured for life."
-      subtitle="Your pet's data is precious. We treat it that way."
-    >
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-        {items.map((it, i) => (
-          <motion.div
-            key={it.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
-            className="rounded-2xl bg-white border border-[#F8FAFC] p-6 hover:border-[#14B8A6]/30 transition-all flex flex-col items-center"
-          >
-            <div className="w-11 h-11 rounded-xl bg-[#EAFBF8] flex items-center justify-center">
-              <it.icon className="w-5 h-5 text-[#14B8A6]" />
-            </div>
-            <h4 className="mt-4 font-bold text-[#111827]">{it.title}</h4>
-            <p className="text-sm text-[#6B7280] mt-1 text-center">{it.text}</p>
-          </motion.div>
-        ))}
+    <section className="relative border-t border-ink/12 py-24 sm:py-32">
+      <div className="mx-auto max-w-[78rem] px-5 sm:px-8">
+        <div className="grid gap-14 sm:grid-cols-2 sm:gap-16">
+          {[
+            ['Available at launch', NOW, true],
+            ['Coming soon', NEXT, false],
+          ].map(([heading, items, live], col) => (
+            <Rise key={heading} delay={col * 0.06}>
+              <div>
+                <div className="flex items-baseline justify-between border-b-2 border-ink pb-3">
+                  <h2 className="font-display text-[1.7rem] leading-none sm:text-[2rem]">
+                    {heading}
+                  </h2>
+                  <span className="data text-[9px] uppercase tracking-[0.2em] text-ink-soft">
+                    {live ? 'Live soon' : 'Planned'}
+                  </span>
+                </div>
+                <ul>
+                  {items.map((item, i) => (
+                    <li
+                      key={item}
+                      className="flex items-baseline gap-4 border-b border-ink/10 py-3.5"
+                    >
+                      <span className="data text-[10px] text-ink-soft">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className={live ? 'text-ink' : 'text-ink-soft'}>{item}</span>
+                      {live && (
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          className="ml-auto shrink-0 self-center text-seal-deep"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M2 6.4 4.7 9 10 3.2"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Rise>
+          ))}
+        </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
-// ---------- Beta Form ----------
-function BetaForm() {
+/* ==================================================================
+   TRUST — terse and typographic
+   ================================================================== */
+const TRUST = [
+  ['The record belongs to the guardian.', 'Not to a clinic, and not to us.'],
+  ['Encrypted in transit and at rest.', 'Including every uploaded document.'],
+  ['Medical history is never public.', 'Verification shows only published fields.'],
+  ['Access can be revoked at any time.', 'Granted per person, per purpose.'],
+];
+
+function Trust() {
+  return (
+    <section className="relative border-t border-ink/12 py-24 sm:py-32">
+      <div className="mx-auto max-w-[78rem] px-5 sm:px-8">
+        <Rise>
+          <h2 className="max-w-[24ch] font-display text-[clamp(1.9rem,4.2vw,3rem)] leading-[1.05] tracking-[-0.015em]">
+            A record this permanent has to be handled carefully.
+          </h2>
+        </Rise>
+        <dl className="mt-14 max-w-[58rem]">
+          {TRUST.map(([term, desc], i) => (
+            <Rise key={term} delay={i * 0.04}>
+              <div className="flex flex-col gap-1.5 border-t border-ink/15 py-6 sm:flex-row sm:items-baseline sm:justify-between sm:gap-10">
+                <dt className="font-display text-[1.4rem] leading-snug">{term}</dt>
+                <dd className="shrink-0 text-[0.95rem] text-ink-soft sm:text-right">{desc}</dd>
+              </div>
+            </Rise>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   BETA — request a ZePaw Identity
+   ================================================================== */
+const PET_TYPES = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Hamster', 'Turtle', 'Exotic', 'Other'];
+
+function Beta() {
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     petType: '',
     city: '',
-    website: '', // honeypot
+    website: '',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [done, setDone] = useState(false);
+  const still = useReducedMotion();
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!form.name || !form.email || !form.petType || !form.city) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      toast.error('Please enter a valid email.');
+  const set = (k) => (e) => {
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+    setErrors((x) => ({ ...x, [k]: undefined }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (form.name.trim().length < 2) e.name = 'Please enter your full name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Please enter a valid email.';
+    if (!form.petType) e.petType = 'Please choose a pet type.';
+    if (form.city.trim().length < 2) e.city = 'Please enter your city.';
+    if (form.phone && !/^[6-9]\d{9}$/.test(form.phone))
+      e.phone = 'Enter a 10-digit number, or leave blank.';
+    return e;
+  };
+
+  const submit = async (ev) => {
+    ev.preventDefault();
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length) {
+      document.getElementById(`beta-${Object.keys(e)[0]}`)?.focus();
       return;
     }
     setLoading(true);
@@ -1145,14 +998,8 @@ function BetaForm() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Submission failed');
-      }
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setForm({ name: '', email: '', phone: '', petType: '', city: '', website: '' });
-      }, 10000);
+      if (!res.ok || !data.success) throw new Error(data.error || 'Submission failed');
+      setDone(true);
     } catch (err) {
       toast.error(err.message || 'Something went wrong.');
     } finally {
@@ -1160,210 +1007,228 @@ function BetaForm() {
     }
   };
 
-  return (
-    <section id="beta" className="relative py-20 mb-20 sm:py-28 sm:mb-28 overflow-hidden">
-      <div className="absolute inset-0 bg-mesh" />
-      <motion.div
-        animate={{ rotate: [0, 360] }}
-        transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#14B8A6]/10 to-[#153E75]/10 blur-3xl"
-      />
-      <div className="relative container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="max-w-xl mx-auto text-center mb-10"
-        >
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EAFBF8] text-[#14B8A6] mb-4">
-            Join the Beta
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#111827] leading-[50px] sm:leading-[50px] lg:leading-[50px]">
-            Be first to give your pet an <span className="text-gradient">identity.</span>
-          </h2>
-          <p className="mt-4 text-[#6B7280]">
-            Get early access to ZePaw and help shape the future of pet healthcare.
-          </p>
-        </motion.div>
+  const field =
+    'mt-2 h-12 w-full border bg-stock px-4 text-[0.95rem] focus:border-seal focus:outline-none';
 
-        <div className="max-w-xl mx-auto">
-          <div className="relative rounded-3xl bg-gradient-to-br from-[#153E75] to-[#14B8A6] p-[2px] shadow-2xl shadow-[#153E75]/20">
-            <div className="rounded-[calc(1.5rem-2px)] bg-white p-6 sm:p-8">
-              <AnimatePresence mode="wait">
-                {success ? (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="py-8 text-center"
-                  >
+  return (
+    <section id="beta" className="relative overflow-hidden border-t border-ink/12 py-24 sm:py-32">
+      {/* Atmosphere has to carry down the page, not stop at the fold. The
+          closing section sits on a photographic field, feathered on every
+          edge into the same paper so there is no seam and no hard band. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 z-0 w-full lg:w-[58%]"
+      >
+        <img
+          src="/assets/pet-landscape.jpg"
+          alt=""
+          width={1600}
+          height={1066}
+          loading="lazy"
+          decoding="async"
+          className="hero-photo h-full w-full object-cover object-[45%_35%] opacity-70 lg:opacity-100"
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[78rem] px-5 sm:px-8">
+        <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
+          <div className="lg:col-span-5">
+            <Rise>
+              <h2 className="max-w-[15ch] font-display text-[clamp(2rem,4.6vw,3.4rem)] leading-[1.02] tracking-[-0.015em]">
+                Be first to give your pet an <span className="italic">identity.</span>
+              </h2>
+            </Rise>
+            <Rise delay={0.06}>
+              <p className="mt-6 max-w-[42ch] text-ink-soft">
+                We are issuing the first identities in Bengaluru and opening city by city.
+                Beta guardians help shape what the record holds, and keep their identity
+                free for life.
+              </p>
+            </Rise>
+            <Rise delay={0.1}>
+              <div className="mt-10 hidden lg:block">
+                <Seal size={128} className="text-ink/15" id="beta-seal" />
+              </div>
+            </Rise>
+          </div>
+
+          <div className="lg:col-span-7">
+            <div className="notch-tr relative bg-stock px-6 py-8 sm:px-10 sm:py-10">
+              <div className="pointer-events-none absolute inset-[7px] border border-ink/20" />
+              <div className="relative">
+                <AnimatePresence mode="wait">
+                  {done ? (
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', duration: 0.6, delay: 0.1 }}
-                      className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#14B8A6] to-[#0D9488] flex items-center justify-center shadow-xl shadow-[#14B8A6]/40"
+                      key="done"
+                      initial={still ? false : { y: 12 }}
+                      animate={{ y: 0 }}
+                      transition={{ duration: 0.55, ease: EASE }}
+                      className="py-6"
+                      role="status"
                     >
-                      <motion.svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                        <motion.path
-                          d="M10 20 L18 28 L32 12"
-                          stroke="white"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ duration: 0.6, delay: 0.4 }}
-                        />
-                      </motion.svg>
+                      <p className="data text-[9px] uppercase tracking-[0.22em] text-seal-deep">
+                        Application received
+                      </p>
+                      <p className="mt-4 max-w-[24ch] font-display text-[2rem] leading-[1.05]">
+                        You are on the register.
+                      </p>
+                      <p className="mt-4 max-w-[42ch] text-[0.95rem] leading-relaxed text-ink-soft">
+                        We will email you when your pet&apos;s identity is ready to issue.
+                        Nothing else: no newsletters, no partners.
+                      </p>
+                      <div className="mt-7 flex items-center gap-5">
+                        <Seal size={64} className="text-seal" id="done-seal" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDone(false);
+                            setForm({
+                              name: '',
+                              email: '',
+                              phone: '',
+                              petType: '',
+                              city: '',
+                              website: '',
+                            });
+                          }}
+                          className="text-[0.9rem] text-ink-soft underline decoration-ink/30 underline-offset-4 transition-colors duration-300 hover:text-ink hover:decoration-ink"
+                        >
+                          Enrol another pet
+                        </button>
+                      </div>
                     </motion.div>
-                    <motion.h3
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
-                      className="mt-6 text-2xl font-extrabold text-[#111827]"
+                  ) : (
+                    <motion.form
+                      key="form"
+                      onSubmit={submit}
+                      noValidate
+                      initial={false}
+                      className="clears-notch"
                     >
-                      🎉 Thank you for enrolling!
-                    </motion.h3>
-                    {/* <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.9 }}
-                      className="mt-3 text-[#6B7280] leading-relaxed"
-                    >
-                      We've successfully received your application.
-                      <br />
-                      Our team will review your submission and contact you soon with beta access and
-                      future updates.
-                    </motion.p> */}
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1.1 }}
-                      className="mt-4 font-semibold text-gradient"
-                    >
-                      Welcome to the future of pet healthcare.
-                    </motion.p>
-                    <button
-                      onClick={() => setSuccess(false)}
-                      className="mt-6 text-sm font-semibold text-[#14B8A6] hover:underline"
-                    >
-                      Submit another response
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onSubmit={submit}
-                    className="space-y-4"
-                  >
-                    {/* Honeypot */}
-                    <input
-                      type="text"
-                      name="website"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={form.website}
-                      onChange={(e) => setForm({ ...form, website: e.target.value })}
-                      className="absolute -left-[9999px] w-px h-px opacity-0"
-                      aria-hidden
-                    />
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Name *</Label>
-                        <Input
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          placeholder="Priya Sharma"
-                          className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
-                        />
+                      <p className="data text-[9px] uppercase tracking-[0.22em] text-ink-soft">
+                        Beta enrolment · Form ZP-01
+                      </p>
+
+                      {/* Honeypot */}
+                      <input
+                        type="text"
+                        name="website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                        value={form.website}
+                        onChange={set('website')}
+                        className="absolute -left-[9999px] h-px w-px opacity-0"
+                      />
+
+                      <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                        {[
+                          ['name', 'Your name', 'text', 'Priya Sharma', 'name'],
+                          ['email', 'Email', 'email', 'you@example.com', 'email'],
+                          ['city', 'City', 'text', 'Bengaluru', 'address-level2'],
+                          ['phone', 'Phone (optional)', 'tel', '98765 43210', 'tel'],
+                        ].map(([key, label, type, placeholder, ac]) => (
+                          <div key={key}>
+                            <label
+                              htmlFor={`beta-${key}`}
+                              className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft"
+                            >
+                              {label}
+                            </label>
+                            <input
+                              id={`beta-${key}`}
+                              type={type}
+                              value={form[key]}
+                              onChange={set(key)}
+                              placeholder={placeholder}
+                              autoComplete={ac}
+                              inputMode={key === 'phone' ? 'numeric' : undefined}
+                              maxLength={key === 'phone' ? 10 : undefined}
+                              aria-invalid={errors[key] ? 'true' : undefined}
+                              aria-describedby={errors[key] ? `beta-${key}-err` : undefined}
+                              className={`${field} ${
+                                errors[key] ? 'border-destructive' : 'border-ink/25'
+                              }`}
+                            />
+                            {errors[key] && (
+                              <p
+                                id={`beta-${key}-err`}
+                                className="mt-1.5 text-[0.78rem] text-destructive"
+                              >
+                                {errors[key]}
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Email *</Label>
-                        <Input
-                          type="email"
-                          value={form.email}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          placeholder="you@example.com"
-                          className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
+
+                      <fieldset className="mt-6">
+                        <legend className="data text-[9px] uppercase tracking-[0.18em] text-ink-soft">
+                          Pet type
+                        </legend>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {PET_TYPES.map((t) => {
+                            const active = form.petType === t;
+                            return (
+                              <button
+                                key={t}
+                                type="button"
+                                aria-pressed={active}
+                                onClick={() => {
+                                  setForm((f) => ({ ...f, petType: t }));
+                                  setErrors((x) => ({ ...x, petType: undefined }));
+                                }}
+                                className={`border px-4 py-2 text-[0.88rem] transition-colors duration-300 ${
+                                  active
+                                    ? 'border-ink bg-ink text-stock'
+                                    : 'border-ink/25 text-ink-soft hover:border-ink hover:text-ink'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <input
+                          id="beta-petType"
+                          className="sr-only"
+                          tabIndex={-1}
+                          value={form.petType}
+                          onChange={() => {}}
+                          aria-hidden="true"
                         />
-                      </div>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">
-                          Phone (optional)
-                        </Label>
-                        <Input
-                          value={form.phone}
-                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          placeholder="98••• 12345"
-                          className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
-                          type="tel"
-                          maxLength={10}
-                          inputMode="numeric"
-                          autoComplete="tel"
-                          pattern="[6-9][0-9]{9}"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">City *</Label>
-                        <Input
-                          value={form.city}
-                          onChange={(e) => setForm({ ...form, city: e.target.value })}
-                          placeholder="Bangalore"
-                          className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
-                      <Select
-                        value={form.petType}
-                        onValueChange={(v) => setForm({ ...form, petType: v })}
+                        {errors.petType && (
+                          <p className="mt-2 text-[0.78rem] text-destructive">{errors.petType}</p>
+                        )}
+                      </fieldset>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="group mt-8 inline-flex w-full items-center justify-center gap-3 bg-ink px-6 py-4 text-stock transition-colors duration-300 hover:bg-seal-deep disabled:opacity-60 sm:w-auto"
                       >
-                        <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
-                          <SelectValue placeholder="Choose your pet" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dog">Dog</SelectItem>
-                          <SelectItem value="Cat">Cat</SelectItem>
-                          <SelectItem value="Bird">Bird</SelectItem>
-                          <SelectItem value="Rabbit">Rabbit</SelectItem>
-                          <SelectItem value="Hamster">Hamster</SelectItem>
-                          <SelectItem value="Turtle">Turtle</SelectItem>
-                          <SelectItem value="Exotic">Exotic Pet</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-12 rounded-xl bg-gradient-to-r from-[#153E75] to-[#14B8A6] hover:opacity-90 text-white font-semibold text-base shadow-lg shadow-[#14B8A6]/25"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Submitting…
-                        </>
-                      ) : (
-                        <>
-                          Join Beta Testing
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-[11px] text-center text-[#6B7280]">
-                      By joining, you agree to receive beta updates. No spam, ever.
-                    </p>
-                  </motion.form>
-                )}
-              </AnimatePresence>
+                        {loading ? 'Filing your application…' : 'File my application'}
+                        {!loading && (
+                          <svg width="13" height="13" viewBox="0 0 12 12" aria-hidden="true">
+                            <path
+                              d="M2.5 9.5 9.5 2.5M4.2 2.5h5.3v5.3"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="transition-transform duration-500 ease-out group-hover:translate-x-[3px] group-hover:-translate-y-[3px]"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                      <p className="mt-4 text-[0.78rem] text-ink-soft">
+                        We email you about your enrolment and nothing else.
+                      </p>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
@@ -1372,173 +1237,220 @@ function BetaForm() {
   );
 }
 
-// ---------- FAQ ----------
+/* ==================================================================
+   FAQ
+   ================================================================== */
 const FAQS = [
-  {
-    q: 'What is a ZePaw Identity?',
-    a: 'A permanent, secure digital identity assigned to every pet like a passport for your companion. It stays with them for life and can be verified anywhere.',
-  },
-  {
-    q: 'How does verification work?',
-    a: 'Anyone can enter a ZePaw Identity or scan the QR code to verify a pet. Only the information the owner chooses to share is shown publicly.',
-  },
-  {
-    q: 'Is my pet\u2019s data secure?',
-    a: 'Yes. All data is encrypted at rest and in transit. Sensitive medical records are never publicly visible. Owners control every sharing decision.',
-  },
-  {
-    q: 'When will the beta launch?',
-    a: 'We\u2019re rolling out invites in waves. Join the beta list and we\u2019ll email you as soon as your access is ready.',
-  },
-  {
-    q: 'Is ZePaw only for dogs and cats?',
-    a: 'No. ZePaw is built for every pet dogs, cats, birds, rabbits, hamsters, turtles, and exotic pets.',
-  },
+  [
+    'What is a ZePaw identity?',
+    'A permanent digital identity issued to a pet, like a passport. It holds their health record for life and can be verified by anyone the owner allows.',
+  ],
+  [
+    'How does verification work?',
+    'Any vet, boarding facility or shelter can enter the identity number or scan the QR tag. Only the fields the owner has published are shown; medical records stay private.',
+  ],
+  [
+    'Is my pet’s data secure?',
+    'Yes. Records are encrypted in transit and at rest. Medical history is never public, and the owner controls every sharing decision and can revoke access at any time.',
+  ],
+  [
+    'When does the beta open?',
+    'Invitations go out in waves. Join the beta list and we will email you when your access is ready.',
+  ],
+  [
+    'Is ZePaw only for dogs and cats?',
+    'No. ZePaw issues identities for dogs, cats, birds, rabbits, hamsters, turtles and exotic pets.',
+  ],
 ];
-function FAQ() {
+
+function Faq() {
   return (
-    <Section
-      id="faq"
-      eyebrow="FAQ"
-      title="Answers, before you ask."
-      subtitle="Everything you need to know about ZePaw."
-    >
-      <div className="max-w-2xl mx-auto">
-        <Accordion type="single" collapsible className="space-y-3">
-          {FAQS.map((f, i) => (
-            <AccordionItem
-              key={i}
-              value={`item-${i}`}
-              className="border border-[#F8FAFC] rounded-2xl px-5 bg-white data-[state=open]:shadow-lg data-[state=open]:border-[#14B8A6]/30 transition-all"
-            >
-              <AccordionTrigger className="text-left font-semibold text-[#111827] hover:no-underline py-4">
-                {f.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-[#6B7280] pb-4 leading-relaxed">
-                {f.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+    <section id="faq" className="relative border-t border-ink/12 py-24 sm:py-32">
+      <div className="mx-auto grid max-w-[78rem] gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-20">
+        <div className="lg:col-span-4">
+          <Rise>
+            <h2 className="font-display text-[clamp(1.9rem,4.2vw,3rem)] leading-[1.02] tracking-[-0.015em]">
+              Questions, <span className="italic">answered.</span>
+            </h2>
+          </Rise>
+          <Rise delay={0.05}>
+            <p className="mt-5 max-w-[32ch] text-[0.95rem] text-ink-soft">
+              Anything else, write to{' '}
+              <a
+                href="mailto:hello@zepaw.in"
+                className="text-ink underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink"
+              >
+                hello@zepaw.in
+              </a>
+              .
+            </p>
+          </Rise>
+        </div>
+
+        <div className="lg:col-span-8">
+          <Accordion type="single" collapsible className="border-t border-ink/20">
+            {FAQS.map(([q, a], i) => (
+              <AccordionItem
+                key={i}
+                value={`q-${i}`}
+                className="border-b border-ink/12 last:border-b"
+              >
+                <AccordionTrigger className="gap-6 py-6 text-left font-display text-[1.25rem] leading-snug hover:no-underline sm:text-[1.4rem]">
+                  {q}
+                </AccordionTrigger>
+                <AccordionContent className="max-w-[58ch] pb-7 text-[0.97rem] leading-relaxed text-ink-soft">
+                  {a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
-// ---------- Footer ----------
+/* ==================================================================
+   FOOTER — its own darker floor, wordmark flush to the bottom edge
+   ================================================================== */
 function Footer() {
   return (
-    <footer className="relative bg-[#111827] text-white pt-16 pb-8 overflow-hidden">
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#14B8A6]/20 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-[#153E75]/30 blur-3xl" />
-      </div>
-      <div className="relative container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/icon-transparent.png"
-                alt="ZePaw"
-                className="h-[60px] w-auto object-contain bg-white rounded-xl "
-              />
-            </div>
-            <p className="mt-4 text-sm text-white/60 max-w-sm leading-relaxed">
-              Creating the digital identity standard for pets. Every pet gets a permanent identity
-              verifiable anywhere, secured for life.
+    <footer className="relative overflow-hidden bg-ink pt-20 text-stock">
+      <div className="mx-auto max-w-[78rem] px-5 sm:px-8">
+        <div className="grid gap-12 pb-16 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="lg:col-span-2">
+            <p className="max-w-[34ch] font-display text-[1.5rem] leading-snug">
+              One record, issued once, carried for a whole life.
             </p>
-            <div className="mt-6 flex gap-3">
+            <div className="mt-7 flex items-center gap-6">
+              {/* Real marks, bare — no tile behind them */}
               <a
                 href="https://www.instagram.com/zepaw.official"
-                aria-label="Instagram"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
                 target="_blank"
+                rel="noopener noreferrer"
+                aria-label="ZePaw on Instagram"
+                className="text-stock/60 transition-colors duration-300 hover:text-stock"
               >
-                {/* <Instagram className="w-4 h-4" /> */}
-                <i className="fa-brands fa-instagram"></i>
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 1.44c-3.14 0-3.51.01-4.75.07-1.15.05-1.77.24-2.18.4-.55.22-.94.47-1.35.88-.41.41-.66.8-.88 1.35-.16.41-.35 1.03-.4 2.18-.06 1.24-.07 1.61-.07 4.75s.01 3.51.07 4.75c.05 1.15.24 1.77.4 2.18.22.55.47.94.88 1.35.41.41.8.66 1.35.88.41.16 1.03.35 2.18.4 1.24.06 1.61.07 4.75.07s3.51-.01 4.75-.07c1.15-.05 1.77-.24 2.18-.4.55-.22.94-.47 1.35-.88.41-.41.66-.8.88-1.35.16-.41.35-1.03.4-2.18.06-1.24.07-1.61.07-4.75s-.01-3.51-.07-4.75c-.05-1.15-.24-1.77-.4-2.18a3.6 3.6 0 0 0-.88-1.35 3.6 3.6 0 0 0-1.35-.88c-.41-.16-1.03-.35-2.18-.4-1.24-.06-1.61-.07-4.75-.07zm0 2.45a5.95 5.95 0 1 1 0 11.9 5.95 5.95 0 0 1 0-11.9zm0 9.81a3.86 3.86 0 1 0 0-7.72 3.86 3.86 0 0 0 0 7.72zm7.58-10.05a1.39 1.39 0 1 1-2.78 0 1.39 1.39 0 0 1 2.78 0z" />
+                </svg>
               </a>
               <a
                 href="mailto:hello@zepaw.in"
-                aria-label="Email"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
+                aria-label="Email ZePaw"
+                className="text-stock/60 transition-colors duration-300 hover:text-stock"
               >
-                <i className="fa-regular fa-envelope"></i>
+                <svg
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="2.5" y="4.5" width="19" height="15" />
+                  <path d="m2.5 6.5 9.5 7 9.5-7" />
+                </svg>
               </a>
             </div>
           </div>
+
+          <nav aria-label="Footer">
+            <h2 className="font-display text-[1.05rem] text-stock/65">Explore</h2>
+            <ul className="mt-4 space-y-2.5 text-[0.92rem] text-stock/75">
+              {NAV.map(([label, href]) => (
+                <li key={href}>
+                  <a href={href} className="transition-colors duration-300 hover:text-stock">
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-white/50">Company</h4>
-            <ul className="mt-4 space-y-2 text-sm text-white/70">
+            <h2 className="font-display text-[1.05rem] text-stock/65">Contact</h2>
+            <ul className="mt-4 space-y-2.5 text-[0.92rem] text-stock/75">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  About
+                <a
+                  href="mailto:hello@zepaw.in"
+                  className="transition-colors duration-300 hover:text-stock"
+                >
+                  hello@zepaw.in
                 </a>
               </li>
               <li>
-                <a href="mailto:support@zepaw.in" className="hover:text-white transition-colors">
-                  Contact
+                <a
+                  href="mailto:support@zepaw.in"
+                  className="transition-colors duration-300 hover:text-stock"
+                >
+                  support@zepaw.in
                 </a>
               </li>
-              <li>
-                <a href="#roadmap" className="hover:text-white transition-colors">
-                  Roadmap
-                </a>
-              </li>
+              <li className="text-stock/70">Bengaluru, India</li>
             </ul>
           </div>
-          {/* <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-white/50">Legal</h4>
-            <ul className="mt-4 space-y-2 text-sm text-white/70">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Terms &amp; Conditions
-                </a>
-              </li>
-            </ul>
-          </div> */}
         </div>
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} ZePaw. All rights reserved.</p>
-          <p>Made with ♥ for pets everywhere.</p>
+
+        <div className="flex flex-col gap-2 border-t border-stock/15 py-6 text-[0.78rem] text-stock/65 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} ZePaw</p>
+          <p>Issuing identities from Bengaluru.</p>
         </div>
+      </div>
+
+      {/* Signature wordmark. Drawn as SVG with textLength so it spans the
+          full measure at every viewport — balanced rather than stranded on
+          one side — and sits flush to the bottom edge with no gap beneath.
+          The viewBox is cut below the baseline so the caps keep full room
+          above while the word rests exactly on the page edge. */}
+      <div className="relative select-none px-5 pt-8 sm:px-8" aria-hidden="true">
+        <svg
+          viewBox="0 0 1000 292"
+          width="100%"
+          className="block text-stock/[0.08]"
+          role="presentation"
+          focusable="false"
+        >
+          <text
+            x="500"
+            y="292"
+            textAnchor="middle"
+            textLength="1000"
+            lengthAdjust="spacing"
+            fill="currentColor"
+            fontFamily="var(--font-display), Georgia, serif"
+            fontSize="368"
+            fontWeight="700"
+          >
+            ZePaw
+          </text>
+        </svg>
       </div>
     </footer>
   );
 }
 
-function LandingPage() {
+/* ================================================================== */
+export default function LandingPage() {
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Nav />
-      <Hero />
-      <Section
-        eyebrow="One Identity"
-        title={
-          <>
-            One Pet. <span className="text-gradient">One Identity.</span> Anywhere.
-          </>
-        }
-        subtitle="Every pet receives a permanent ZePaw Identity a passport for their entire life. Verify anywhere. Recognised everywhere."
-      >
-        <IdentityCard />
-      </Section>
-      <Vault />
-      <Timeline />
-      <Reminders />
-      <PetParents />
-      <Comparison />
-      <Roadmap />
-      <Privacy />
-      <BetaForm />
-      <FAQ />
+      <div id="main">
+        <Hero />
+        <Record />
+        <Vault />
+        <Ledger />
+        <Verify />
+        <EveryPet />
+        <Issue />
+        <Trust />
+        <Beta />
+        <Faq />
+      </div>
       <Footer />
-    </>
+    </MotionConfig>
   );
 }
-
-export default LandingPage;

@@ -17,7 +17,27 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['var(--font-display)', 'Iowan Old Style', 'Georgia', 'serif'],
+        sans: ['var(--font-body)'],
+      },
       colors: {
+        paper: 'hsl(var(--paper))',
+        stone: 'hsl(var(--stone))',
+        stock: 'hsl(var(--card-stock))',
+        ink: {
+          DEFAULT: 'hsl(var(--ink))',
+          soft: 'hsl(var(--ink-soft))',
+          body: 'hsl(var(--body))',
+        },
+        seal: {
+          DEFAULT: 'hsl(var(--seal))',
+          deep: 'hsl(var(--seal-deep))',
+        },
+        amber: {
+          DEFAULT: 'hsl(var(--amber))',
+          deep: 'hsl(var(--amber-deep))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
