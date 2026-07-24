@@ -192,42 +192,35 @@ function Nav() {
               <ArrowRight className="w-4 h-4" />
             </a>
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-white/60"
+              className="md:hidden p-2 rounded-lg hover:bg-white/60 text-2xl"
               onClick={() => setOpen(!open)}
               aria-label="menu"
             >
-              <Menu className="w-5 h-5 text-[#153E75]" />
+              <i className="fa-solid fa-bars"></i>
             </button>
           </div>
         </div>
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="md:hidden mt-2 glass rounded-2xl p-2 flex flex-col"
-            >
-              {NAV.map((n) => (
-                <a
-                  key={n.href}
-                  href={n.href}
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-3 text-sm font-medium text-[#111827] hover:bg-white/70 rounded-xl"
-                >
-                  {n.label}
-                </a>
-              ))}
+        {open && (
+          <div className="md:hidden mt-2 glass rounded-2xl p-2 flex flex-col">
+            {NAV.map((n) => (
               <a
-                href="#beta"
+                key={n.href}
+                href={n.href}
                 onClick={() => setOpen(false)}
-                className="mt-1 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#153E75] to-[#14B8A6] rounded-xl text-center"
+                className="px-4 py-3 text-sm font-medium text-[#111827] hover:bg-white/70 rounded-xl"
               >
-                Join Beta
+                {n.label}
               </a>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ))}
+            <a
+              href="#beta"
+              onClick={() => setOpen(false)}
+              className="mt-1 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#153E75] to-[#14B8A6] rounded-xl text-center"
+            >
+              Join Beta
+            </a>
+          </div>
+        )}
       </div>
     </header>
   );
