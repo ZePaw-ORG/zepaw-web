@@ -60,11 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -880,13 +876,12 @@ function Privacy() {
 // ---------- Beta Form ----------
 function BetaForm() {
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    full_name: '',
+    email_address: '',
+    phone_number: '',
+    pet_type: '',
     state: '',
     city: '',
-    petType: '',
-    website: '', // honeypot
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -916,11 +911,11 @@ function BetaForm() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.petType || !form.state || !form.city) {
+    if (!form.full_name || !form.email_address || !form.pet_type) {
       toast.error('Please fill in all required fields.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email_address)) {
       toast.error('Please enter a valid email.');
       return;
     }
@@ -938,7 +933,14 @@ function BetaForm() {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setForm({ name: '', email: '', phone: '', state: '', city: '', petType: '', website: '' });
+        setForm({
+          full_name: '',
+          email_address: '',
+          phone_number: '',
+          pet_type: '',
+          state: '',
+          city: '',
+        });
       }, 10000);
     } catch (err) {
       toast.error(err.message || 'Something went wrong.');
@@ -1044,20 +1046,22 @@ function BetaForm() {
                     />
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Name *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">Full Name *</Label>
                         <Input
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          placeholder="Priya Sharma"
+                          value={form.full_name}
+                          onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                          placeholder="John Doe"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Email *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">
+                          Email Address*
+                        </Label>
                         <Input
                           type="email"
-                          value={form.email}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          value={form.email_address}
+                          onChange={(e) => setForm({ ...form, email_address: e.target.value })}
                           placeholder="you@example.com"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                         />
@@ -1069,8 +1073,8 @@ function BetaForm() {
                           Phone (optional)
                         </Label>
                         <Input
-                          value={form.phone}
-                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          value={form.phone_number}
+                          onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
                           placeholder="98••• 12345"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                           type="tel"
@@ -1117,9 +1121,7 @@ function BetaForm() {
                                 !form.state && 'text-muted-foreground'
                               )}
                             >
-                              <span className="truncate">
-                                {form.state || 'Select State / UT'}
-                              </span>
+                              <span className="truncate">{form.state || 'Select State / UT'}</span>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -1139,7 +1141,9 @@ function BetaForm() {
                                       <Check
                                         className={cn(
                                           'mr-2 h-4 w-4',
-                                          form.state === s.name ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                          form.state === s.name
+                                            ? 'opacity-100 text-[#14B8A6]'
+                                            : 'opacity-0'
                                         )}
                                       />
                                       {s.name}
@@ -1171,7 +1175,9 @@ function BetaForm() {
                                 {!form.state
                                   ? 'Select state first'
                                   : form.city ||
-                                    (availableCities.length === 0 ? 'No cities found' : 'Select City')}
+                                    (availableCities.length === 0
+                                      ? 'No cities found'
+                                      : 'Select City')}
                               </span>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -1195,7 +1201,9 @@ function BetaForm() {
                                       <Check
                                         className={cn(
                                           'mr-2 h-4 w-4',
-                                          form.city === cityName ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                          form.city === cityName
+                                            ? 'opacity-100 text-[#14B8A6]'
+                                            : 'opacity-0'
                                         )}
                                       />
                                       {cityName}
@@ -1207,6 +1215,26 @@ function BetaForm() {
                           </PopoverContent>
                         </Popover>
                       </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
+                      <Select
+                        value={form.pet_type}
+                        onValueChange={(v) => setForm({ ...form, pet_type: v })}
+                      >
+                        <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
+                          <SelectValue placeholder="Choose your pet" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Dog">Dog</SelectItem>
+                          <SelectItem value="Cat">Cat</SelectItem>
+                          <SelectItem value="Bird">Bird</SelectItem>
+                          <SelectItem value="Rabbit">Rabbit</SelectItem>
+                          <SelectItem value="Hamster">Hamster</SelectItem>
+                          <SelectItem value="Exotic">Exotic Pet</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button
                       type="submit"
