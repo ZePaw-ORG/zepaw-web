@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { State, City } from 'country-state-city';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   PawPrint,
@@ -39,7 +40,7 @@ import {
   Brain,
   ArrowRight,
   Loader2,
-  // Instagram,
+  Instagram,
   // Linkedin,
   Mail,
   MapPin,
@@ -47,6 +48,7 @@ import {
   User,
   ScanLine,
   BadgeCheck,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,11 +61,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const NAV = [
@@ -192,11 +208,11 @@ function Nav() {
               <ArrowRight className="w-4 h-4" />
             </a>
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-white/60 text-2xl"
+              className="md:hidden p-2 rounded-lg hover:bg-white/60 text-[#111827]"
               onClick={() => setOpen(!open)}
               aria-label="menu"
             >
-              <i className="fa-solid fa-bars"></i>
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -867,16 +883,40 @@ function BetaForm() {
     name: '',
     email: '',
     phone: '',
-    petType: '',
+    state: '',
     city: '',
+    petType: '',
     website: '', // honeypot
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+
+  const indianStates = useMemo(() => {
+    return State.getStatesOfCountry('IN').sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const availableCities = useMemo(() => {
+    if (!form.state) return [];
+    const selectedState = indianStates.find((s) => s.name === form.state);
+    if (!selectedState) return [];
+    const cities = City.getCitiesOfState('IN', selectedState.isoCode) || [];
+    return Array.from(new Set(cities.map((c) => c.name))).sort((a, b) => a.localeCompare(b));
+  }, [form.state, indianStates]);
+
+  const handleStateChange = (stateName) => {
+    setForm((prev) => ({
+      ...prev,
+      state: stateName,
+      city: '', // Reset city when state changes
+    }));
+    setStateOpen(false);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.petType || !form.city) {
+    if (!form.name || !form.email || !form.petType || !form.state || !form.city) {
       toast.error('Please fill in all required fields.');
       return;
     }
@@ -898,7 +938,7 @@ function BetaForm() {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setForm({ name: '', email: '', phone: '', petType: '', city: '', website: '' });
+        setForm({ name: '', email: '', phone: '', state: '', city: '', petType: '', website: '' });
       }, 10000);
     } catch (err) {
       toast.error(err.message || 'Something went wrong.');
@@ -1041,35 +1081,132 @@ function BetaForm() {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">City *</Label>
-                        <Input
-                          value={form.city}
-                          onChange={(e) => setForm({ ...form, city: e.target.value })}
-                          placeholder="Bangalore"
-                          className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
-                        />
+                        <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
+                        <Select
+                          value={form.petType}
+                          onValueChange={(v) => setForm({ ...form, petType: v })}
+                        >
+                          <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
+                            <SelectValue placeholder="Choose your pet" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Dog">Dog</SelectItem>
+                            <SelectItem value="Cat">Cat</SelectItem>
+                            <SelectItem value="Bird">Bird</SelectItem>
+                            <SelectItem value="Rabbit">Rabbit</SelectItem>
+                            <SelectItem value="Hamster">Hamster</SelectItem>
+                            <SelectItem value="Turtle">Turtle</SelectItem>
+                            <SelectItem value="Exotic">Exotic Pet</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
-                      <Select
-                        value={form.petType}
-                        onValueChange={(v) => setForm({ ...form, petType: v })}
-                      >
-                        <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
-                          <SelectValue placeholder="Choose your pet" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dog">Dog</SelectItem>
-                          <SelectItem value="Cat">Cat</SelectItem>
-                          <SelectItem value="Bird">Bird</SelectItem>
-                          <SelectItem value="Rabbit">Rabbit</SelectItem>
-                          <SelectItem value="Hamster">Hamster</SelectItem>
-                          <SelectItem value="Turtle">Turtle</SelectItem>
-                          <SelectItem value="Exotic">Exotic Pet</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {/* State Combobox */}
+                      <div>
+                        <Label className="text-xs font-semibold text-[#153E75]">State *</Label>
+                        <Popover open={stateOpen} onOpenChange={setStateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={stateOpen}
+                              className={cn(
+                                'mt-1.5 w-full h-11 justify-between font-normal rounded-xl border-[#E5E7EB] bg-transparent text-sm hover:bg-transparent shadow-none px-3 text-left',
+                                !form.state && 'text-muted-foreground'
+                              )}
+                            >
+                              <span className="truncate">
+                                {form.state || 'Select State / UT'}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-xl border-[#E5E7EB]">
+                            <Command>
+                              <CommandInput placeholder="Search state..." className="h-10" />
+                              <CommandList className="max-h-60 overflow-y-auto">
+                                <CommandEmpty>No state found.</CommandEmpty>
+                                <CommandGroup>
+                                  {indianStates.map((s) => (
+                                    <CommandItem
+                                      key={s.isoCode}
+                                      value={s.name}
+                                      onSelect={() => handleStateChange(s.name)}
+                                      className="cursor-pointer py-2 text-sm"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          form.state === s.name ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                        )}
+                                      />
+                                      {s.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* City Combobox */}
+                      <div>
+                        <Label className="text-xs font-semibold text-[#153E75]">City *</Label>
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={cityOpen}
+                              disabled={!form.state || availableCities.length === 0}
+                              className={cn(
+                                'mt-1.5 w-full h-11 justify-between font-normal rounded-xl border-[#E5E7EB] bg-transparent text-sm hover:bg-transparent shadow-none px-3 text-left disabled:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed',
+                                !form.city && 'text-muted-foreground'
+                              )}
+                            >
+                              <span className="truncate">
+                                {!form.state
+                                  ? 'Select state first'
+                                  : form.city ||
+                                    (availableCities.length === 0 ? 'No cities found' : 'Select City')}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-xl border-[#E5E7EB]">
+                            <Command>
+                              <CommandInput placeholder="Search city..." className="h-10" />
+                              <CommandList className="max-h-60 overflow-y-auto">
+                                <CommandEmpty>No city found.</CommandEmpty>
+                                <CommandGroup>
+                                  {availableCities.map((cityName) => (
+                                    <CommandItem
+                                      key={cityName}
+                                      value={cityName}
+                                      onSelect={() => {
+                                        setForm((prev) => ({ ...prev, city: cityName }));
+                                        setCityOpen(false);
+                                      }}
+                                      className="cursor-pointer py-2 text-sm"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          form.city === cityName ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                        )}
+                                      />
+                                      {cityName}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                     <Button
                       type="submit"
@@ -1181,18 +1318,18 @@ function Footer() {
               <a
                 href="https://www.instagram.com/zepaw.official"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
+                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-white"
                 target="_blank"
+                rel="noreferrer"
               >
-                {/* <Instagram className="w-4 h-4" /> */}
-                <i className="fa-brands fa-instagram"></i>
+                <Instagram className="w-5 h-5" />
               </a>
               <a
                 href="mailto:hello@zepaw.in"
                 aria-label="Email"
-                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-xl"
+                className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-white"
               >
-                <i className="fa-regular fa-envelope"></i>
+                <Mail className="w-5 h-5" />
               </a>
             </div>
           </div>
