@@ -74,7 +74,6 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
     <>
       <html lang="en" className={jakarta.variable}>
         <head>
-          <script src="https://kit.fontawesome.com/9430fba654.js" crossOrigin="anonymous"></script>
           <meta name="apple-mobile-web-app-title" content="ZePaw" />
           <link rel="manifest" href="/favicon/site.webmanifest" />
         </head>

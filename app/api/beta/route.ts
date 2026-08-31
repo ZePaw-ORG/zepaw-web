@@ -46,7 +46,7 @@ async function handleBetaSignup(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
   }
 
-  const { name, email, phone, petType, city, website } = body || {};
+  const { name, email, phone, petType, state, city, website } = body || {};
 
   // Honeypot: bots will fill this hidden field
   if (website && website.trim() !== '') {
@@ -72,8 +72,14 @@ async function handleBetaSignup(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (!state || typeof state !== 'string' || state.trim().length < 2) {
+    return NextResponse.json(
+      { success: false, error: 'Please select your state.' },
+      { status: 400 }
+    );
+  }
   if (!city || typeof city !== 'string' || city.trim().length < 2) {
-    return NextResponse.json({ success: false, error: 'Please enter your city.' }, { status: 400 });
+    return NextResponse.json({ success: false, error: 'Please select your city.' }, { status: 400 });
   }
 
   // Avoid duplicate entries with check on email
@@ -90,16 +96,24 @@ async function handleBetaSignup(request: NextRequest) {
   }
 
   try {
-    const { error } = await supabaseAdmin
-      .from(tableName)
-      .insert({
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim() ?? null,
-        pettype: petType.trim(),
-        city: city.trim(),
-      })
-      .select();
+    const insertPayload: Record<string, any> = {
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone ? phone.trim() : null,
+      pettype: petType.trim(),
+      city: city.trim(),
+      state: state.trim(),
+    };
+
+    let { error } = await supabaseAdmin.from(tableName).insert(insertPayload).select();
+
+    // Fallback if table does not yet have 'state' column
+    if (error && error.message && error.message.toLowerCase().includes('state')) {
+      const fallbackPayload = { ...insertPayload };
+      delete fallbackPayload.state;
+      const fallbackResult = await supabaseAdmin.from(tableName).insert(fallbackPayload).select();
+      error = fallbackResult.error;
+    }
 
     if (error) {
       console.error('Something went wrong- ', error);
