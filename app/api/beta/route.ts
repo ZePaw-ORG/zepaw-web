@@ -66,18 +66,6 @@ async function handleBetaSignup(request: NextRequest) {
       { status: 400 }
     );
   }
-  if (!state || typeof state !== 'string' || state.trim().length < 2) {
-    return NextResponse.json(
-      { success: false, error: 'Please select your state.' },
-      { status: 400 }
-    );
-  }
-  if (!city || typeof city !== 'string' || city.trim().length < 2) {
-    return NextResponse.json(
-      { success: false, error: 'Please select your city.' },
-      { status: 400 }
-    );
-  }
 
   // Avoid duplicate entries with check on email
   const { data: emailFound } = await supabaseAdmin
