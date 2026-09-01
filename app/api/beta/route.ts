@@ -46,27 +46,21 @@ async function handleBetaSignup(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
   }
 
-  const { name, email, phone, petType, state, city, website } = body || {};
+  const { full_name, email_address, phone_number, pet_type, city, state } = body || {};
 
-  // Honeypot: bots will fill this hidden field
-  if (website && website.trim() !== '') {
-    // Fake success to bots
-    return NextResponse.json({ success: true });
-  }
-
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+  if (!full_name || typeof full_name !== 'string' || full_name.trim().length < 2) {
     return NextResponse.json(
       { success: false, error: 'Please enter your full name.' },
       { status: 400 }
     );
   }
-  if (!isValidEmail(email)) {
+  if (!isValidEmail(email_address)) {
     return NextResponse.json(
       { success: false, error: 'Please enter a valid email.' },
       { status: 400 }
     );
   }
-  if (!petType || typeof petType !== 'string') {
+  if (!pet_type || typeof pet_type !== 'string') {
     return NextResponse.json(
       { success: false, error: 'Please select a pet type.' },
       { status: 400 }
@@ -79,11 +73,17 @@ async function handleBetaSignup(request: NextRequest) {
     );
   }
   if (!city || typeof city !== 'string' || city.trim().length < 2) {
-    return NextResponse.json({ success: false, error: 'Please select your city.' }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: 'Please select your city.' },
+      { status: 400 }
+    );
   }
 
   // Avoid duplicate entries with check on email
-  const { data: emailFound } = await supabaseAdmin.from(tableName).select().eq('email', email);
+  const { data: emailFound } = await supabaseAdmin
+    .from(tableName)
+    .select()
+    .eq('email_address', email_address);
 
   if (emailFound?.length) {
     return NextResponse.json(
@@ -95,12 +95,14 @@ async function handleBetaSignup(request: NextRequest) {
     );
   }
 
+  console.log(body, 'body');
+
   try {
     const insertPayload: Record<string, any> = {
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone ? phone.trim() : null,
-      pettype: petType.trim(),
+      full_name: full_name.trim(),
+      email_address: email_address.trim(),
+      phone_number: phone_number.trim() ?? null,
+      pet_type: pet_type.trim(),
       city: city.trim(),
       state: state.trim(),
     };
@@ -108,12 +110,23 @@ async function handleBetaSignup(request: NextRequest) {
     let { error } = await supabaseAdmin.from(tableName).insert(insertPayload).select();
 
     // Fallback if table does not yet have 'state' column
-    if (error && error.message && error.message.toLowerCase().includes('state')) {
-      const fallbackPayload = { ...insertPayload };
-      delete fallbackPayload.state;
-      const fallbackResult = await supabaseAdmin.from(tableName).insert(fallbackPayload).select();
-      error = fallbackResult.error;
-    }
+    // if (error && error.message && error.message.toLowerCase().includes('state')) {
+    //   const fallbackPayload = { ...insertPayload };
+    //   delete fallbackPayload.state;
+    //   const fallbackResult = await supabaseAdmin.from(tableName).insert(fallbackPayload).select();
+    //   error = fallbackResult.error;
+    // }
+    // const { error } = await supabaseAdmin
+    //   .from(tableName)
+    //   .insert({
+    //     full_name: full_name.trim(),
+    //     email_address: email_address.trim(),
+    //     phone_number: phone_number.trim() ?? null,
+    //     pet_type: pet_type.trim(),
+    //     city: city.trim(),
+    //     state: state.trim(),
+    //   })
+    //   .select();
 
     if (error) {
       console.error('Something went wrong- ', error);

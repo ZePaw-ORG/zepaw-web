@@ -60,11 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -672,7 +668,6 @@ const PETS = [
   { icon: Bird, label: 'Birds' },
   { icon: Rabbit, label: 'Rabbits' },
   { icon: PawPrint, label: 'Hamsters' },
-  { icon: Turtle, label: 'Turtles' },
   { icon: Sparkles, label: 'Exotic Pets' },
 ];
 function PetParents() {
@@ -682,7 +677,7 @@ function PetParents() {
       title="Built for every pet parent."
       subtitle="Whatever kind of companion shares your home, ZePaw is for them."
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
         {PETS.map((p, i) => (
           <div
             key={p.label}
@@ -880,13 +875,12 @@ function Privacy() {
 // ---------- Beta Form ----------
 function BetaForm() {
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    full_name: '',
+    email_address: '',
+    phone_number: '',
+    pet_type: '',
     state: '',
     city: '',
-    petType: '',
-    website: '', // honeypot
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -916,11 +910,11 @@ function BetaForm() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.petType || !form.state || !form.city) {
+    if (!form.full_name || !form.email_address || !form.pet_type) {
       toast.error('Please fill in all required fields.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email_address)) {
       toast.error('Please enter a valid email.');
       return;
     }
@@ -938,7 +932,14 @@ function BetaForm() {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setForm({ name: '', email: '', phone: '', state: '', city: '', petType: '', website: '' });
+        setForm({
+          full_name: '',
+          email_address: '',
+          phone_number: '',
+          pet_type: '',
+          state: '',
+          city: '',
+        });
       }, 10000);
     } catch (err) {
       toast.error(err.message || 'Something went wrong.');
@@ -1031,33 +1032,24 @@ function BetaForm() {
                     onSubmit={submit}
                     className="space-y-4"
                   >
-                    {/* Honeypot */}
-                    <input
-                      type="text"
-                      name="website"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={form.website}
-                      onChange={(e) => setForm({ ...form, website: e.target.value })}
-                      className="absolute -left-[9999px] w-px h-px opacity-0"
-                      aria-hidden
-                    />
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Name *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">Full Name *</Label>
                         <Input
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          placeholder="Priya Sharma"
+                          value={form.full_name}
+                          onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                          placeholder="John Doe"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">Email *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">
+                          Email Address*
+                        </Label>
                         <Input
                           type="email"
-                          value={form.email}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          value={form.email_address}
+                          onChange={(e) => setForm({ ...form, email_address: e.target.value })}
                           placeholder="you@example.com"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                         />
@@ -1069,8 +1061,8 @@ function BetaForm() {
                           Phone (optional)
                         </Label>
                         <Input
-                          value={form.phone}
-                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          value={form.phone_number}
+                          onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
                           placeholder="98••• 12345"
                           className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]"
                           type="tel"
@@ -1083,8 +1075,8 @@ function BetaForm() {
                       <div>
                         <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
                         <Select
-                          value={form.petType}
-                          onValueChange={(v) => setForm({ ...form, petType: v })}
+                          value={form.pet_type}
+                          onValueChange={(v) => setForm({ ...form, pet_type: v })}
                         >
                           <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
                             <SelectValue placeholder="Choose your pet" />
@@ -1095,7 +1087,6 @@ function BetaForm() {
                             <SelectItem value="Bird">Bird</SelectItem>
                             <SelectItem value="Rabbit">Rabbit</SelectItem>
                             <SelectItem value="Hamster">Hamster</SelectItem>
-                            <SelectItem value="Turtle">Turtle</SelectItem>
                             <SelectItem value="Exotic">Exotic Pet</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
@@ -1105,7 +1096,7 @@ function BetaForm() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* State Combobox */}
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">State *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">State</Label>
                         <Popover open={stateOpen} onOpenChange={setStateOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -1117,9 +1108,7 @@ function BetaForm() {
                                 !form.state && 'text-muted-foreground'
                               )}
                             >
-                              <span className="truncate">
-                                {form.state || 'Select State / UT'}
-                              </span>
+                              <span className="truncate">{form.state || 'Select State / UT'}</span>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -1139,7 +1128,9 @@ function BetaForm() {
                                       <Check
                                         className={cn(
                                           'mr-2 h-4 w-4',
-                                          form.state === s.name ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                          form.state === s.name
+                                            ? 'opacity-100 text-[#14B8A6]'
+                                            : 'opacity-0'
                                         )}
                                       />
                                       {s.name}
@@ -1154,7 +1145,7 @@ function BetaForm() {
 
                       {/* City Combobox */}
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">City *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">City</Label>
                         <Popover open={cityOpen} onOpenChange={setCityOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -1171,7 +1162,9 @@ function BetaForm() {
                                 {!form.state
                                   ? 'Select state first'
                                   : form.city ||
-                                    (availableCities.length === 0 ? 'No cities found' : 'Select City')}
+                                    (availableCities.length === 0
+                                      ? 'No cities found'
+                                      : 'Select City')}
                               </span>
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -1195,7 +1188,9 @@ function BetaForm() {
                                       <Check
                                         className={cn(
                                           'mr-2 h-4 w-4',
-                                          form.city === cityName ? 'opacity-100 text-[#14B8A6]' : 'opacity-0'
+                                          form.city === cityName
+                                            ? 'opacity-100 text-[#14B8A6]'
+                                            : 'opacity-0'
                                         )}
                                       />
                                       {cityName}
@@ -1355,7 +1350,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} ZePaw. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} BeeSight Technologies. All rights reserved.</p>
           <p>Made with ♥ for pets everywhere.</p>
         </div>
       </div>
