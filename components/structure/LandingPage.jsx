@@ -668,7 +668,6 @@ const PETS = [
   { icon: Bird, label: 'Birds' },
   { icon: Rabbit, label: 'Rabbits' },
   { icon: PawPrint, label: 'Hamsters' },
-  { icon: Turtle, label: 'Turtles' },
   { icon: Sparkles, label: 'Exotic Pets' },
 ];
 function PetParents() {
@@ -678,7 +677,7 @@ function PetParents() {
       title="Built for every pet parent."
       subtitle="Whatever kind of companion shares your home, ZePaw is for them."
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
         {PETS.map((p, i) => (
           <div
             key={p.label}
@@ -1076,8 +1075,8 @@ function BetaForm() {
                       <div>
                         <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
                         <Select
-                          value={form.petType}
-                          onValueChange={(v) => setForm({ ...form, petType: v })}
+                          value={form.pet_type}
+                          onValueChange={(v) => setForm({ ...form, pet_type: v })}
                         >
                           <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
                             <SelectValue placeholder="Choose your pet" />
@@ -1088,7 +1087,6 @@ function BetaForm() {
                             <SelectItem value="Bird">Bird</SelectItem>
                             <SelectItem value="Rabbit">Rabbit</SelectItem>
                             <SelectItem value="Hamster">Hamster</SelectItem>
-                            <SelectItem value="Turtle">Turtle</SelectItem>
                             <SelectItem value="Exotic">Exotic Pet</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
@@ -1098,7 +1096,7 @@ function BetaForm() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* State Combobox */}
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">State *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">State</Label>
                         <Popover open={stateOpen} onOpenChange={setStateOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -1147,7 +1145,7 @@ function BetaForm() {
 
                       {/* City Combobox */}
                       <div>
-                        <Label className="text-xs font-semibold text-[#153E75]">City *</Label>
+                        <Label className="text-xs font-semibold text-[#153E75]">City</Label>
                         <Popover open={cityOpen} onOpenChange={setCityOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -1204,26 +1202,6 @@ function BetaForm() {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold text-[#153E75]">Pet Type *</Label>
-                      <Select
-                        value={form.pet_type}
-                        onValueChange={(v) => setForm({ ...form, pet_type: v })}
-                      >
-                        <SelectTrigger className="mt-1.5 h-11 rounded-xl border-[#E5E7EB]">
-                          <SelectValue placeholder="Choose your pet" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dog">Dog</SelectItem>
-                          <SelectItem value="Cat">Cat</SelectItem>
-                          <SelectItem value="Bird">Bird</SelectItem>
-                          <SelectItem value="Rabbit">Rabbit</SelectItem>
-                          <SelectItem value="Hamster">Hamster</SelectItem>
-                          <SelectItem value="Exotic">Exotic Pet</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                     <Button
                       type="submit"
@@ -1372,7 +1350,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} ZePaw. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} BeeSight Technologies. All rights reserved.</p>
           <p>Made with ♥ for pets everywhere.</p>
         </div>
       </div>
