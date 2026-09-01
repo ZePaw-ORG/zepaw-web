@@ -95,6 +95,8 @@ async function handleBetaSignup(request: NextRequest) {
     );
   }
 
+  console.log(body, 'body');
+
   try {
     const insertPayload: Record<string, any> = {
       full_name: full_name.trim(),

@@ -1033,17 +1033,6 @@ function BetaForm() {
                     onSubmit={submit}
                     className="space-y-4"
                   >
-                    {/* Honeypot */}
-                    <input
-                      type="text"
-                      name="website"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={form.website}
-                      onChange={(e) => setForm({ ...form, website: e.target.value })}
-                      className="absolute -left-[9999px] w-px h-px opacity-0"
-                      aria-hidden
-                    />
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-xs font-semibold text-[#153E75]">Full Name *</Label>
