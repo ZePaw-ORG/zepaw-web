@@ -1346,11 +1346,21 @@ function Footer() {
                   Roadmap
                 </a>
               </li>
+              <li>
+                Founder -
+                <a
+                  href="http://www.linkedin.com/in/sunil0009"
+                  target="_blank"
+                  className="hover:text-white transition-colors"
+                >
+                  Sunil Meena
+                </a>
+              </li>
             </ul>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} BeeSight Technologies. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} BeeSight Technologies LLP. All rights reserved.</p>
           <p>Made with ♥ for pets everywhere.</p>
         </div>
       </div>
