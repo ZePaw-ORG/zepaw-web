@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { State, City } from 'country-state-city';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   PawPrint,
   ShieldCheck,
@@ -14,7 +14,6 @@ import {
   Shield,
   Award,
   Bell,
-  Calendar,
   Scissors,
   Heart,
   Stethoscope,
@@ -24,11 +23,9 @@ import {
   Cat,
   Bird,
   Rabbit,
-  Turtle,
   Sparkles,
   Check,
   X,
-  ChevronDown,
   Menu,
   Lock,
   Cloud,
@@ -41,12 +38,8 @@ import {
   ArrowRight,
   Loader2,
   Instagram,
-  // Linkedin,
   Mail,
-  MapPin,
-  Phone,
   User,
-  ScanLine,
   BadgeCheck,
   ChevronsUpDown,
 } from 'lucide-react';
@@ -1254,7 +1247,7 @@ const FAQS = [
   },
   {
     q: 'Is ZePaw only for dogs and cats?',
-    a: 'No. ZePaw is built for every pet dogs, cats, birds, rabbits, hamsters, turtles, and exotic pets.',
+    a: 'No. ZePaw is built for every pet dogs, cats, birds, rabbits, hamsters, and exotic pets.',
   },
 ];
 function FAQ() {
